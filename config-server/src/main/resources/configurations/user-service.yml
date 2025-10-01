@@ -1,0 +1,44 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oose_db?timezone=Asia/Ho_Chi_Minh
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+app:
+  security:
+    jwt:
+      access-expires-at: 3600000
+      refresh-expires-at: 604800000
+      prefix: "Bearer "
+      auth-header: "Authorization"
+      access-secret: mysupersecret
+      refresh-secret: myrefreshsecret
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  # Cấu hình server URL để Swagger hiển thị đúng địa chỉ API Gateway
+  server:
+    url: http://localhost:8222
+    description: API Gateway (Development)

@@ -1,0 +1,96 @@
+server:
+  port: 8222
+
+spring:
+  application:
+    name: api-gateway
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # ========== USER SERVICE ==========
+
+        # Route cho OpenAPI docs - Pattern 1
+        - id: user-service-docs-1
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
+        - id: user-service-docs-2
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # Route cho authentication
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+
+        # Route cho users - ĐẶT SAU CÙNG
+        - id: user-service-users
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: user-service-customer
+          uri: lb://user-service
+          predicates:
+          - Path=/api/customer/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: User Service
+        url: /api/users/v3/api-docs  # Đổi lại thành /api/users/v3/api-docs
+    urls-primary-name: User Service
+    operationsSorter: method
+    tagsSorter: alpha
+
+app:
+  security:
+    jwt:
+      access-expires-at: 3600000
+      refresh-expires-at: 604800000
+      prefix: "Bearer "
+      auth-header: "Authorization"
+      access-secret: mysupersecret
+      refresh-secret: myrefreshsecret
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
