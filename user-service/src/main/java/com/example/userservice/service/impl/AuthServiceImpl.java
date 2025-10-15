@@ -67,7 +67,6 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse refreshToken(String refreshToken) {
         try {
             if (refreshToken != null) {
-                refreshToken = refreshToken.replaceFirst("Bearer ", "");
                 if (jwtService.validateRefreshToken(refreshToken)) {
                     Authentication auth = jwtService.createAuthentication(refreshToken);
 

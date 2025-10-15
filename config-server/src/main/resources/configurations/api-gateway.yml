@@ -6,6 +6,19 @@ spring:
     name: api-gateway
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
   cloud:
     gateway:
       discovery:
@@ -46,6 +59,36 @@ spring:
           uri: lb://user-service
           predicates:
           - Path=/api/customer/**
+        # ========== VEHICLE SERVICE ==========
+
+        # Route cho OpenAPI docs - Pattern 1
+        - id: vehicle-service-docs-1
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/vehicle-service/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
+        - id: vehicle-service-docs-2
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+        # Route cho vehicle
+        - id: vehicle-service-vehicles
+          uri: lb://vehicle-service
+          predicates:
+          - Path=/api/vehicles/**
+          filters:
+            - JwtAuthenticationFilter
+        - id: vehicle-service-types
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicle-types/**
+          filters:
+            - JwtAuthenticationFilter
 
       globalcors:
         cors-configurations:
@@ -54,6 +97,29 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
+      # Default Filters
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+              factor: 2
+              basedOnPreviousValue: false
+        - AddResponseHeader=X-Response-Time, ${responseTime}
+        - RemoveRequestHeader=Cookie
+
+    # Load Balancer Configuration
+    loadbalancer:
+      ribbon:
+        enabled: false
+      cache:
+        enabled: true
+        ttl: 30s
+        capacity: 256
 
 springdoc:
   swagger-ui:
@@ -62,9 +128,13 @@ springdoc:
     urls:
       - name: User Service
         url: /api/users/v3/api-docs  # Đổi lại thành /api/users/v3/api-docs
+      - name: Vehicle Service
+        url: /api/vehicles/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha
+    api-docs:
+      enabled: true
 
 app:
   security:
@@ -75,6 +145,17 @@ app:
       auth-header: "Authorization"
       access-secret: mysupersecret
       refresh-secret: myrefreshsecret
+# Gateway Cache Configuration
+gateway:
+  cache:
+    enabled: true
+    ttl: 300  # 5 minutes
+    max-size: 1000
+
+# Service URLs (if not using service discovery)
+service:
+  user:
+    url: http://localhost:8081
 
 eureka:
   client:
@@ -89,7 +170,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
 
 logging:
   level:

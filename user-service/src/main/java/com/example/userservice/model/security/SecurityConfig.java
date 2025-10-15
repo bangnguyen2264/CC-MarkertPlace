@@ -38,11 +38,7 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final ObjectMapper objectMapper;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/login", "/api/auth/register",
-            "/api/users/v3/api-docs/**", "/api/users/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs",
-            "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/actuator/**"
-    };
+    private static final String[] PUBLIC_ENDPOINTS = {"/api/auth/login", "/api/auth/register", "/api/users/v3/api-docs/**", "/api/users/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/actuator/**",  };
 
     private static final String ADMIN_ENDPOINTS = "/api/users/**";
 
@@ -50,25 +46,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.info("Configuring SecurityFilterChain");
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration cfg = new CorsConfiguration();
-                    cfg.setAllowedOriginPatterns(Collections.singletonList("*"));
-                    cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-                    cfg.setAllowedHeaders(List.of("*"));
-                    cfg.setAllowCredentials(true);
-                    return cfg;
-                }))
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(this::handleUnauthorized)
-                        .accessDeniedHandler(this::handleForbidden))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(ADMIN_ENDPOINTS).hasAnyAuthority(Role.ADMIN.name())
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration cfg = new CorsConfiguration();
+            cfg.setAllowedOriginPatterns(Collections.singletonList("*"));
+            cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+            cfg.setAllowedHeaders(List.of("*"));
+            cfg.setAllowCredentials(true);
+            return cfg;
+        })).exceptionHandling(exception -> exception.authenticationEntryPoint(this::handleUnauthorized).accessDeniedHandler(this::handleForbidden)).authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll().requestMatchers(ADMIN_ENDPOINTS).hasAnyAuthority(Role.ADMIN.name()).anyRequest().authenticated()).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -86,22 +71,12 @@ public class SecurityConfig {
     private void handleUnauthorized(HttpServletRequest request, HttpServletResponse response, AuthenticationException ex) throws IOException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json");
-        objectMapper.writeValue(response.getWriter(), Map.of(
-                "status", HttpStatus.UNAUTHORIZED.value(),
-                "error", "Unauthorized",
-                "message", "Authentication failed: " + (ex.getMessage() != null ? ex.getMessage() : "No credentials provided"),
-                "path", request.getRequestURI()
-        ));
+        objectMapper.writeValue(response.getWriter(), Map.of("status", HttpStatus.UNAUTHORIZED.value(), "error", "Unauthorized", "message", "Authentication failed: " + (ex.getMessage() != null ? ex.getMessage() : "No credentials provided"), "path", request.getRequestURI()));
     }
 
     private void handleForbidden(HttpServletRequest request, HttpServletResponse response, AccessDeniedException ex) throws IOException {
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType("application/json");
-        objectMapper.writeValue(response.getWriter(), Map.of(
-                "status", HttpStatus.FORBIDDEN.value(),
-                "error", "Forbidden",
-                "message", "Access denied: " + (ex.getMessage() != null ? ex.getMessage() : "Insufficient permissions"),
-                "path", request.getRequestURI()
-        ));
+        objectMapper.writeValue(response.getWriter(), Map.of("status", HttpStatus.FORBIDDEN.value(), "error", "Forbidden", "message", "Access denied: " + (ex.getMessage() != null ? ex.getMessage() : "Insufficient permissions"), "path", request.getRequestURI()));
     }
 }

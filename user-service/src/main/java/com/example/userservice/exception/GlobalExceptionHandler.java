@@ -92,4 +92,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 webRequest.getDescription(false));
         return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
     }
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(ConflictException exception,
+                                                                     WebRequest webRequest){
+        ErrorResponse errorDetails = new ErrorResponse(new Date(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                webRequest.getDescription(false));
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
 }

@@ -5,14 +5,10 @@ import com.example.userservice.model.dto.request.UserUpdateRequest;
 import com.example.userservice.model.dto.response.UserResponse;
 import com.example.userservice.service.CustomerService;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,7 +29,7 @@ public class CustomerController {
     }
 
     @PatchMapping("/change-password")
-    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request){
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request){
         return ResponseEntity.ok(customerService.changePassword(request));
     }
 }
