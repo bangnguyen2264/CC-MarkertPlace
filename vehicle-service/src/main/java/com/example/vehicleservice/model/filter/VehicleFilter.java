@@ -8,7 +8,6 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class VehicleFilter extends BaseFilter {
-
     private Long ownerId;
     private String vin;
     private Long vehicleTypeId;

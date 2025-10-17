@@ -1,31 +1,39 @@
+server:
+  port: 8081
 
 spring:
   application:
     name: user-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/oose_db?timezone=Asia/Ho_Chi_Minh
+    url: jdbc:postgresql://localhost:5432/oose_db
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     consumer:
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
-        spring:
-          json:
-            trusted:
-              packages: "*"
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.json.trusted.packages: com.example.commondto.dto.request,com.example.commondto.dto.response
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+
 eureka:
   client:
     service-url:
@@ -50,7 +58,6 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-  # Cấu hình server URL để Swagger hiển thị đúng địa chỉ API Gateway
   server:
     url: http://localhost:8222
     description: API Gateway (Development)

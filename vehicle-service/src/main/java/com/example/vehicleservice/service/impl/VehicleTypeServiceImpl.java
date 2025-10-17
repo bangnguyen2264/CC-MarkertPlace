@@ -38,16 +38,25 @@ public class VehicleTypeServiceImpl implements VehicleTypeService {
     @Override
     public List<VehicleTypeResponse> getAll(VehicleTypeFilter vehicleTypeFilter) {
         Pageable pageable = CrudUtils.createPageable(vehicleTypeFilter);
-        var spec = buildFilter(vehicleTypeFilter.getName());
+        Specification<VehicleType> spec = buildFilter(vehicleTypeFilter);
         var result = vehicleTypeRepository.findAll(spec, pageable);
         return result.stream().map(VehicleTypeResponse::from).toList();
     }
 
- private Specification<VehicleType> buildFilter(String name) {
-        return (root, query, cb) -> name == null || name.isBlank()
-                ? null
-                : cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+    private Specification<VehicleType> buildFilter(VehicleTypeFilter vehicleTypeFilter) {
+        Specification<VehicleType> spec = (root, query, cb) -> cb.conjunction();
+
+        if (vehicleTypeFilter.getModel() != null && !vehicleTypeFilter.getModel().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("model"), vehicleTypeFilter.getModel()));
+        }
+
+        if (vehicleTypeFilter.getManufacturer() != null && !vehicleTypeFilter.getManufacturer().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("manufacturer"), vehicleTypeFilter.getManufacturer()));
+        }
+
+        return spec;
     }
+
 
     @Override
     public VehicleTypeResponse getById(Long id) {

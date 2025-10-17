@@ -41,8 +41,6 @@ public class Vehicle extends BaseEntity {
 
     private String registrationImageUrl;
 
-    private LocalDateTime activatedAt;
-
     private String note;
 
     // 🔹 Tham chiếu loại xe

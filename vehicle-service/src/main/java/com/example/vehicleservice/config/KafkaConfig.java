@@ -1,18 +1,18 @@
-package com.example.vehicleservice.config;
+package com.example.userservice.config;
 
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.producer.ProducerConfig;
+import com.example.commondto.dto.request.UserValidationRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.*;
-import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
-import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
@@ -20,62 +20,59 @@ import java.util.Map;
 
 @Configuration
 @EnableKafka
+@Slf4j
 public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    // Tên topic cho request–reply
-    public static final String REQUEST_TOPIC = "user-validation-request";
-    public static final String REPLY_TOPIC = "user-validation-reply";
+    @Value("${spring.kafka.consumer.group-id}")
+    private String groupId;
 
-    // Producer Config
+    /**
+     * Tạo ConsumerFactory với cấu hình rõ ràng
+     */
     @Bean
-    public ProducerFactory<String, Object> producerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(props);
+    public ConsumerFactory<String, UserValidationRequest> consumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+
+        // Cấu hình cho ErrorHandlingDeserializer
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
+
+        // Cấu hình cho JsonDeserializer
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.example.commondto.dto.*");
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, UserValidationRequest.class.getName());
+        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+        log.info("ConsumerFactory created with bootstrap servers: {}", bootstrapServers);
+        return new DefaultKafkaConsumerFactory<>(config);
     }
 
-    // Consumer Config
+    /**
+     * Tạo container factory cho listener
+     */
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
-        JsonDeserializer<Object> deserializer = new JsonDeserializer<>();
-        deserializer.addTrustedPackages("*");
+    public ConcurrentKafkaListenerContainerFactory<String, UserValidationRequest>
+    kafkaListenerContainerFactory(ConsumerFactory<String, UserValidationRequest> consumerFactory) {
 
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "vehicle-service-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
-    }
+        ConcurrentKafkaListenerContainerFactory<String, UserValidationRequest> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
 
-    // Listener container for replies
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> replyContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(false);
+        factory.setConcurrency(3);
+
+        // Error handler
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler();
+        factory.setCommonErrorHandler(errorHandler);
+
+        log.info("KafkaListenerContainerFactory created for vehicle-service");
         return factory;
-    }
-
-    // Request–Reply Template
-    @Bean
-    public ReplyingKafkaTemplate<String, Object, Object> replyingKafkaTemplate(
-            ProducerFactory<String, Object> pf,
-            ConcurrentKafkaListenerContainerFactory<String, Object> replyFactory) {
-        return new ReplyingKafkaTemplate<>(pf, replyFactory.createContainer(REPLY_TOPIC));
-    }
-
-    // Tạo topic
-    @Bean
-    public NewTopic requestTopic() {
-        return new NewTopic(REQUEST_TOPIC, 1, (short) 1);
-    }
-
-    @Bean
-    public NewTopic replyTopic() {
-        return new NewTopic(REPLY_TOPIC, 1, (short) 1);
     }
 }
