@@ -89,6 +89,19 @@ spring:
             - Path=/api/vehicle-types/**
           filters:
             - JwtAuthenticationFilter
+        # Route cho journey
+        - id: vehicle-service-journey
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles/**
+          filters:
+            - JwtAuthenticationFilter
+        - id: vehicle-service-types
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/journeys/**
+          filters:
+            - JwtAuthenticationFilter
 
       globalcors:
         cors-configurations:

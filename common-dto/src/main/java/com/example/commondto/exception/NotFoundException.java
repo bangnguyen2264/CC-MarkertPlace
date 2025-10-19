@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.example.commondto.exception;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {

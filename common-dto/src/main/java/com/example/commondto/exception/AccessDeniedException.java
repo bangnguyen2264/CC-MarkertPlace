@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.example.commondto.exception;
 
 public class AccessDeniedException extends RuntimeException {
     public AccessDeniedException(String message) {

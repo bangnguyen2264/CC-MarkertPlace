@@ -11,17 +11,18 @@
         <module name="eureka-server" />
         <module name="config-server" />
       </profile>
-      <profile name="Annotation profile for verification-service" enabled="true">
+      <profile name="Annotation profile for microservices" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
         </processorPath>
-        <module name="verification-service" />
         <module name="user-service" />
+        <module name="verification-service" />
         <module name="vehicle-service" />
         <module name="common-dto" />
+        <module name="media-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -36,9 +37,10 @@
       <module name="common-dto" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="media-service" options="" />
       <module name="user-service" options="" />
       <module name="vehicle-service" options="" />
-      <module name="verification-service" options="-parameters" />
+      <module name="verification-service" options="" />
     </option>
   </component>
 </project>

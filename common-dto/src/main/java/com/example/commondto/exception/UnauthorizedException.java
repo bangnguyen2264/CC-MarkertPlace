@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.example.commondto.exception;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException( String message ) {

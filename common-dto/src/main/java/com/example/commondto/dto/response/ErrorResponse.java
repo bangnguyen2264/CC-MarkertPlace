@@ -1,10 +1,8 @@
-package com.example.userservice.model.dto.response;
+package com.example.commondto.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Builder;
 import lombok.Data;
 
-import java.time.Instant;
 import java.util.Date;
 
 @Data

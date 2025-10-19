@@ -1,4 +1,4 @@
-package com.example.userservice.exception;
+package com.example.commondto.exception;
 
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {

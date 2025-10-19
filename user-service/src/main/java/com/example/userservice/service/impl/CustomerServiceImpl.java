@@ -1,7 +1,7 @@
 package com.example.userservice.service.impl;
 
 import com.example.commondto.utils.BeanCopyUtils;
-import com.example.userservice.exception.UnauthorizedException;
+import com.example.commondto.exception.UnauthorizedException;
 import com.example.userservice.model.dto.request.ChangePasswordRequest;
 import com.example.userservice.model.dto.request.UserUpdateRequest;
 import com.example.userservice.model.dto.response.UserResponse;

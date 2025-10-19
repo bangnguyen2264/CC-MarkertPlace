@@ -1,7 +1,7 @@
 package com.example.userservice.service.impl;
 
-import com.example.userservice.exception.ConflictException;
-import com.example.userservice.exception.UnauthorizedException;
+import com.example.commondto.exception.ConflictException;
+import com.example.commondto.exception.UnauthorizedException;
 import com.example.userservice.model.dto.request.LoginRequest;
 import com.example.userservice.model.dto.request.RegisterRequest;
 import com.example.userservice.model.dto.response.AuthResponse;
