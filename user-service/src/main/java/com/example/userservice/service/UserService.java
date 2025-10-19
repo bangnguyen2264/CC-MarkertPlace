@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface UserService {
     List<UserResponse> getAll(UserFilter userFilter);
-    UserResponse getById(Long id);
-    UserResponse update(Long id,UserUpdateRequest userUpdateRequest);
-    void delete(Long id);
+    UserResponse getById(String id);
+    UserResponse update(String id,UserUpdateRequest userUpdateRequest);
+    void delete(String id);
 }

@@ -7,10 +7,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.Optional;
 
 
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
 
-    boolean existsByIdOrEmail(Long id, String email);
+    boolean existsByIdOrEmail(String id, String email);
 }

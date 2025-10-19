@@ -1,5 +1,6 @@
 package com.example.userservice.service.impl;
 
+import com.example.commondto.utils.BeanCopyUtils;
 import com.example.userservice.exception.NotFoundException;
 import com.example.userservice.model.dto.request.UserUpdateRequest;
 import com.example.userservice.model.dto.response.UserResponse;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<UserResponse> getAll(UserFilter userFilter) {
         // Create sorting
         Sort sort = Sort.by(userFilter.getSort(),
@@ -66,33 +69,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public UserResponse getById(Long id) {
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
+    public UserResponse getById(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return mapToResponseDto(user);
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
-    public UserResponse update(Long id,UserUpdateRequest userUpdateRequest) {
+    public UserResponse update(String id,UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
-        user.setFullName(userUpdateRequest.getFullName());
-        user.setEmail(userUpdateRequest.getEmail());
-        user.setPhoneNumber(userUpdateRequest.getPhoneNumber());
-        user.setDob(userUpdateRequest.getDob());
-
-        User updatedUser = userRepository.save(user);
-        return mapToResponseDto(updatedUser);
+        try {
+            BeanCopyUtils.copyNonNullProperties(userUpdateRequest, user);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException("Failed to update user profile", e);
+        }
+        return mapToResponseDto(userRepository.save(user));
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void delete(Long id) {
+    public void delete(String id) {
         if (!userRepository.existsById(id)) {
             throw new NotFoundException("User not found");
         }

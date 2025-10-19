@@ -9,6 +9,6 @@ import lombok.*;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserValidationRequest {
-    private Long userId;
+    private String userId;
     private String email;
 }

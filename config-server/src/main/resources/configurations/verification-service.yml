@@ -1,12 +1,12 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
   application:
-    name: user-service
+    name: verification-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/oose_db
+    url: jdbc:postgresql://localhost:5432/oose_db?timezone=Asia/Ho_Chi_Minh
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -14,7 +14,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -43,21 +43,7 @@ eureka:
   instance:
     prefer-ip-address: true
 
-app:
-  security:
-    jwt:
-      access-expires-at: 3600000
-      refresh-expires-at: 604800000
-      prefix: "Bearer "
-      auth-header: "Authorization"
-      access-secret: mysupersecret
-      refresh-secret: myrefreshsecret
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  server:
-    url: http://localhost:8222
-    description: API Gateway (Development)
+logging:
+  level:
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: DEBUG

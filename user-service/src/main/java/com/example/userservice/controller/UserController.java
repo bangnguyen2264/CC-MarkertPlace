@@ -31,7 +31,7 @@ public class UserController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
     @Operation(summary = "Get user by ID", description = "Retrieves a user by their ID. Accessible by admin or the user themselves.")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable String id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
@@ -39,7 +39,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a user", description = "Updates a user's information by their ID. Admin access only.")
     public ResponseEntity<UserResponse> update(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Valid @Schema(implementation = UserUpdateRequest.class) UserUpdateRequest request
     ) {
         return ResponseEntity.ok(userService.update(id, request));
@@ -48,7 +48,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a user", description = "Deletes a user by their ID. Admin access only.")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }

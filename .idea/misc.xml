@@ -12,6 +12,7 @@
         <option value="$PROJECT_DIR$/vehicle-service/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/common-dto/pom.xml" />
+        <option value="$PROJECT_DIR$/verification-service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

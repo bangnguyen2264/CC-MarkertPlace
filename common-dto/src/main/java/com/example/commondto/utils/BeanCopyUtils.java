@@ -1,4 +1,4 @@
-package com.example.userservice.utils;
+package com.example.commondto.utils;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.util.StringUtils;

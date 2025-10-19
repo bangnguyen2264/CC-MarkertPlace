@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Data
 @Builder
 public class AuthResponse implements Serializable {
-    private Long id;
+    private String id;
     private String token;
     private String refreshToken;
     private String username;
