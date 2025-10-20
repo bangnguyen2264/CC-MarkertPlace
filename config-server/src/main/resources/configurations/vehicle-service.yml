@@ -42,8 +42,11 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-
-logging:
-  level:
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: DEBUG
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  server:
+    url: http://localhost:8222
+    description: API Gateway (Development)

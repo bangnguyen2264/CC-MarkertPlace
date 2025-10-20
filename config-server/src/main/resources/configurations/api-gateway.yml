@@ -25,6 +25,16 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      security:
+        rules:
+
+          - path: /api/media/get/**
+            method: GET
+            access: PUBLIC
+          - path: /api/admin/**
+            method: ANY
+            access: ADMIN
+
       routes:
         # ========== USER SERVICE ==========
 
@@ -102,6 +112,32 @@ spring:
             - Path=/api/journeys/**
           filters:
             - JwtAuthenticationFilter
+        # ========== MEDIA SERVICE ==========
+
+        # Route cho OpenAPI docs - Pattern 1
+        - id: media-service-docs-1
+          uri: lb://media-service
+          predicates:
+            - Path=/media-service/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
+        - id: media-service-docs-2
+          uri: lb://media-service
+          predicates:
+            - Path=/api/media/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+        # Route cho vehicle
+        - id: media-service-media
+          uri: lb://media-service
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - JwtAuthenticationFilter
+
+
 
       globalcors:
         cors-configurations:
@@ -143,6 +179,8 @@ springdoc:
         url: /api/users/v3/api-docs  # Đổi lại thành /api/users/v3/api-docs
       - name: Vehicle Service
         url: /api/vehicles/v3/api-docs
+      - name: Media Service
+        url: /api/media/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha
@@ -188,8 +226,5 @@ management:
     health:
       show-details: always
     gateway:
-      enabled: true
+      access: unrestricted
 
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG

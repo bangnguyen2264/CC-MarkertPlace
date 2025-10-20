@@ -1,6 +1,7 @@
 package com.example.apigateway;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -15,12 +16,14 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
+    private final SecurityRuleMatcher ruleMatcher;
 
-    // ✅ QUAN TRỌNG: Phải có constructor này
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, JwtProperties jwtProperties) {
-        super(Config.class);  // ← Dòng này rất quan trọng!
+    // ✅ BẮT BUỘC phải có super(Config.class)
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, JwtProperties jwtProperties, SecurityRuleMatcher ruleMatcher) {
+        super(Config.class);
         this.jwtUtil = jwtUtil;
         this.jwtProperties = jwtProperties;
+        this.ruleMatcher = ruleMatcher;
     }
 
     @Override
@@ -28,41 +31,36 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().value();
+            String method = request.getMethod() != null ? request.getMethod().name() : "UNKNOWN";
 
-            log.debug("Processing JWT authentication for path: {}", path);
+            SecurityRule rule = ruleMatcher.match(path, request.getMethod());
 
-            // Extract token from header
+            // 🔓 Nếu là PUBLIC → bỏ qua xác thực
+            if (rule != null && "PUBLIC".equalsIgnoreCase(rule.getAccess())) {
+                log.debug("Public endpoint: {} {}", method, path);
+                return chain.filter(exchange);
+            }
+
+            // 🛡️ Nếu yêu cầu xác thực
             String authHeader = request.getHeaders().getFirst(jwtProperties.getAuthHeader());
             if (authHeader == null || authHeader.isEmpty()) {
-                log.warn("Missing Authorization header for path: {}", path);
                 return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
             String token = jwtUtil.extractTokenFromHeader(authHeader);
-            if (token == null) {
-                log.warn("Invalid Authorization header format for path: {}", path);
-                return onError(exchange, "Invalid Authorization header format", HttpStatus.UNAUTHORIZED);
-            }
-
-            // Validate token
-            if (!jwtUtil.validateAccessToken(token)) {
-                log.warn("Invalid JWT token for path: {}", path);
+            if (token == null || !jwtUtil.validateAccessToken(token)) {
                 return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
             }
 
-            // Extract user info and add to headers
             String username = jwtUtil.extractUsername(token);
             String role = jwtUtil.extractRole(token);
 
-            if (username == null || role == null) {
-                log.warn("Failed to extract user info from token for path: {}", path);
-                return onError(exchange, "Invalid token claims", HttpStatus.UNAUTHORIZED);
+            // ⚖️ Kiểm tra role
+            if (rule != null && !rule.getAccess().contains(role)) {
+                return onError(exchange, "Forbidden: role not allowed", HttpStatus.FORBIDDEN);
             }
 
-            log.debug("Successfully authenticated user: {} with role: {} for path: {}", username, role, path);
-
-            // Add user info to request headers for downstream services
-            ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
+            ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Name", username)
                     .header("X-User-Role", role)
                     .build();
@@ -80,8 +78,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         );
     }
 
+    // ✅ Bắt buộc phải có inner static class Config
     public static class Config {
-        // Configuration properties if needed
-        // Có thể thêm fields nếu cần pass config từ YAML
+        // có thể để trống, nhưng phải có public no-args constructor
+        public Config() {
+        }
     }
 }
