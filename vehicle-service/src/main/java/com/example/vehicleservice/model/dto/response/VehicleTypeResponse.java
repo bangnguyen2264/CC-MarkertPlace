@@ -13,7 +13,7 @@ import lombok.Data;
 public class VehicleTypeResponse {
 
     @Schema(description = "ID của loại xe", example = "1")
-    private Long id;
+    private String id;
 
     @Schema(description = "Hãng sản xuất xe", example = "VinFast")
     private String manufacturer;

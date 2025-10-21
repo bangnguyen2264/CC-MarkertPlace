@@ -1,5 +1,6 @@
 package com.example.vehicleservice.model.filter;
 
+import com.example.commondto.dto.filter.BaseFilter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

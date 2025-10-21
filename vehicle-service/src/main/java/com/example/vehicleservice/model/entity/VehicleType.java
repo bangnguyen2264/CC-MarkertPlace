@@ -1,5 +1,6 @@
 package com.example.vehicleservice.model.entity;
 
+import com.example.commondto.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,8 +15,8 @@ import lombok.*;
 @Builder
 public class VehicleType extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     // 🔹 Hãng xe (VD: Tesla, VinFast, BYD)
     @Column(nullable = false)
@@ -30,5 +31,5 @@ public class VehicleType extends BaseEntity {
     // 🔹 Lượng CO₂ phát thải/km (đơn vị: kg/km)
     @Column(nullable = false)
     @NotNull
-    private double co2PerKm;
+    private Double co2PerKm;
 }

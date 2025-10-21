@@ -1,7 +1,7 @@
 package com.example.vehicleservice.security;
 
 
-import com.example.vehicleservice.exception.AccessDeniedException;
+import com.example.commondto.exception.AccessDeniedException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -15,9 +15,19 @@ import java.util.Arrays;
 @Component
 public class RoleGuardAspect {
 
-    @Before("@within(roleRequired) || @annotation(roleRequired)")
-    public void authorize(JoinPoint joinPoint, RoleRequired roleRequired) {
+    @Before("@annotation(roleRequired)")
+    public void authorizeMethod(JoinPoint joinPoint, RoleRequired roleRequired) {
+        checkRole(joinPoint, roleRequired);
+    }
+
+    @Before("@within(roleRequired)")
+    public void authorizeClass(JoinPoint joinPoint, RoleRequired roleRequired) {
+        checkRole(joinPoint, roleRequired);
+    }
+
+    private void checkRole(JoinPoint joinPoint, RoleRequired roleRequired) {
         var context = UserContextHolder.get();
+        log.info("Authorizing role {}", (Object) roleRequired.value());
 
         if (context == null) {
             throw new AccessDeniedException("Missing user context");
@@ -34,7 +44,8 @@ public class RoleGuardAspect {
         if (!allowed) {
             log.warn("Access denied: user '{}' with role '{}' tried to access {}",
                     context.getUsername(), currentRole, joinPoint.getSignature());
-            throw new AccessDeniedException("You cannot access by your role ");
+            throw new AccessDeniedException("You cannot access by your role");
         }
     }
 }
+

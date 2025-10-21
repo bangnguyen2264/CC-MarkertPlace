@@ -2,7 +2,6 @@ package com.example.vehicleservice.controller;
 
 import com.example.vehicleservice.model.dto.request.VehicleTypeRequest;
 import com.example.vehicleservice.model.dto.response.VehicleTypeResponse;
-import com.example.vehicleservice.model.entity.VehicleType;
 import com.example.vehicleservice.model.filter.VehicleTypeFilter;
 import com.example.vehicleservice.security.RoleRequired;
 import com.example.vehicleservice.service.VehicleTypeService;
@@ -35,7 +34,18 @@ public class VehicleTypeController {
         return ResponseEntity.ok(vehicleTypeService.getAll(vehicleTypeFilter));
     }
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleTypeResponse> getVehicleTypeById(@PathVariable Long id) {
+    public ResponseEntity<VehicleTypeResponse> getVehicleTypeById(@PathVariable String id) {
         return ResponseEntity.ok(vehicleTypeService.getById(id));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<VehicleTypeResponse> updateVehicleType(@PathVariable String id, @ModelAttribute VehicleTypeRequest vehicleType) {
+        return ResponseEntity.ok(vehicleTypeService.update(id, vehicleType));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVehicleType(@PathVariable String id) {
+        vehicleTypeService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

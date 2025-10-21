@@ -11,7 +11,7 @@ public interface VehicleTypeService {
     List<VehicleTypeResponse> addAll(List<VehicleTypeRequest> vehicleTypes);
     VehicleTypeResponse create(VehicleTypeRequest vehicleType);
     List<VehicleTypeResponse> getAll(VehicleTypeFilter vehicleTypeFilter);
-    VehicleTypeResponse getById(Long id);
-    VehicleTypeResponse update(VehicleTypeRequest vehicleType);
-    void delete(Long id);
+    VehicleTypeResponse getById(String id);
+    VehicleTypeResponse update(String id,VehicleTypeRequest vehicleType);
+    void delete(String id);
 }

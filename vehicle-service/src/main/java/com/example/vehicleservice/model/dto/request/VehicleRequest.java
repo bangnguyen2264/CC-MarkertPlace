@@ -17,9 +17,8 @@ import java.time.LocalDate;
 public class VehicleRequest {
 
     @Schema(description = "ID của người sở hữu xe (mapping với user bên User-Service)", example = "101", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "Owner ID không được để trống")
-    @Positive(message = "Owner ID phải là số dương")
-    private Long ownerId;
+    @NotBlank(message = "Owner ID không được để trống")
+    private String ownerId;
 
     @Schema(description = "Mã VIN duy nhất của xe điện", example = "VF9A12345B6789012", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "VIN không được để trống")
@@ -51,9 +50,8 @@ public class VehicleRequest {
     private Long mileage;
 
     @Schema(description = "ID của loại xe (liên kết đến bảng vehicle_types)", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "Vehicle Type ID không được để trống")
-    @Positive(message = "Vehicle Type ID phải là số dương")
-    private Long vehicleTypeId;
+    @NotBlank(message = "Loaị xe không được để trống")
+    private String vehicleTypeId;
 
     @Schema(description = "URL ảnh chụp giấy đăng ký xe", example = "https://cdn.example.com/vehicles/reg-001.jpg")
     @Pattern(

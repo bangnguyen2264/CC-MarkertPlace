@@ -6,13 +6,17 @@ import com.example.vehicleservice.model.entity.Vehicle;
 import com.example.vehicleservice.model.filter.VehicleFilter;
 import com.example.vehicleservice.model.filter.VehicleTypeFilter;
 import com.example.vehicleservice.service.VehicleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sound.midi.Patch;
 import java.util.List;
 
 @RestController
@@ -25,12 +29,29 @@ public class VehicleController {
     public ResponseEntity<VehicleResponse> createVehicle(@Valid @RequestBody VehicleRequest vehiclerequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(vehicleService.create(vehiclerequest));
     }
+
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleResponse> getById(@PathVariable Long id) {
+    public ResponseEntity<VehicleResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(vehicleService.getById(id));
     }
+
     @GetMapping
     public ResponseEntity<List<VehicleResponse>> getAll(@Valid @ParameterObject VehicleFilter vehicleFilter) {
         return ResponseEntity.ok(vehicleService.getAll(vehicleFilter));
+    }
+
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Cập nhật thông tin xe", description = "Cập nhật dữ liệu xe với multipart/form-data")
+    public ResponseEntity<VehicleResponse> update(
+            @PathVariable String id,
+            @ModelAttribute VehicleRequest vehicleRequest // dùng @ModelAttribute cho multipart
+    ) {
+        return ResponseEntity.ok(vehicleService.update(id, vehicleRequest));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        vehicleService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

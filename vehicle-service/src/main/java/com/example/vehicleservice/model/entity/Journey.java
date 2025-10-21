@@ -1,44 +1,31 @@
 package com.example.vehicleservice.model.entity;
 
-import com.example.vehicleservice.model.constants.JourneyStatus;
+import com.example.commondto.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-@Table(name = "journeys")
+@Table(name = "journey")
 public class Journey extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    // Liên kết 1–1 tới Vehicle
-    @OneToOne
-    @JoinColumn(name = "vehicle_id", unique = true)
-    private Vehicle vehicle;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     // Số km người dùng nhập vào form
-    private double distanceKm;
+    private Double distanceKm;
 
-    // Thời gian bắt đầu / kết thúc hành trình (người dùng nhập hoặc giả lập)
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Double energyUsed;
+
+    private Double averageSpeed;
 
     // Lượng CO2 giảm phát thải (kg)
-    private double co2Reduced;
+    private Double co2Reduced;
 
-    // Trạng thái: PENDING, VERIFIED, REJECTED
-    @Enumerated(EnumType.STRING)
-    private JourneyStatus status;
-
-    // Ghi chú từ CVA hoặc Admin
-    private String verificationNote;
-
-    // Ngày tạo
-    private LocalDateTime createdAt;
+    @OneToOne(mappedBy = "journey")
+    private Vehicle vehicle;
 }

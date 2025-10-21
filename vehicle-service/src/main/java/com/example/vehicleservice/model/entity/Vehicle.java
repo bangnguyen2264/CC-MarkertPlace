@@ -1,5 +1,6 @@
 package com.example.vehicleservice.model.entity;
 
+import com.example.commondto.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,11 +17,11 @@ import java.time.LocalDateTime;
 public class Vehicle extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(nullable = false)
-    private Long ownerId;
+    private String ownerId;
 
     @Column(nullable = false, unique = true)
     private String vin;
@@ -42,6 +43,10 @@ public class Vehicle extends BaseEntity {
     private String registrationImageUrl;
 
     private String note;
+    // Liên kết 1–1 tới Vehicle
+    @OneToOne(cascade = CascadeType.ALL,orphanRemoval = true)
+    @JoinColumn(name = "journey_id", unique = true)
+    private Journey journey;
 
     // 🔹 Tham chiếu loại xe
     @ManyToOne(fetch = FetchType.EAGER)
