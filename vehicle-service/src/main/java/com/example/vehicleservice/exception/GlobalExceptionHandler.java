@@ -1,7 +1,7 @@
 package com.example.vehicleservice.exception;
 
-
-import com.example.vehicleservice.model.dto.response.ErrorResponse;
+import com.example.commondto.dto.response.ErrorResponse;
+import com.example.commondto.exception.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException exception,
-                                                                     WebRequest webRequest){
+                                                                   WebRequest webRequest){
         ErrorResponse errorDetails = new ErrorResponse(
                 new Date(),
                 HttpStatus.BAD_REQUEST.value(),
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizationException(UnauthorizedException exception,
-                                                                          WebRequest webRequest){
+                                                                        WebRequest webRequest){
         ErrorResponse errorDetails = new ErrorResponse(
                 new Date(),
                 HttpStatus.UNAUTHORIZED.value(),
@@ -85,10 +85,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException exception,
-                                                                       WebRequest webRequest){
+                                                                     WebRequest webRequest){
         ErrorResponse errorDetails = new ErrorResponse(new Date(),
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 exception.getMessage(),
                 webRequest.getDescription(false));
         return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);

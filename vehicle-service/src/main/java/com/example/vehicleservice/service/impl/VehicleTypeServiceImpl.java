@@ -1,19 +1,20 @@
 package com.example.vehicleservice.service.impl;
 
-import com.example.vehicleservice.exception.NotFoundException;
+import com.example.commondto.exception.NotFoundException;
+import com.example.commondto.utils.BeanCopyUtils;
 import com.example.vehicleservice.model.dto.request.VehicleTypeRequest;
 import com.example.vehicleservice.model.dto.response.VehicleTypeResponse;
 import com.example.vehicleservice.model.entity.VehicleType;
 import com.example.vehicleservice.model.filter.VehicleTypeFilter;
 import com.example.vehicleservice.repository.VehicleTypeRepository;
 import com.example.vehicleservice.service.VehicleTypeService;
-import com.example.vehicleservice.utils.CrudUtils;
+import com.example.commondto.utils.CrudUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @Service
@@ -59,21 +60,28 @@ public class VehicleTypeServiceImpl implements VehicleTypeService {
 
 
     @Override
-    public VehicleTypeResponse getById(Long id) {
-        VehicleType vehicleType = vehicleTypeRepository.findById(id).orElseThrow(()-> new NotFoundException("Vehicle Type Not Found"));
+    public VehicleTypeResponse getById(String id) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Vehicle Type Not Found"));
         return VehicleTypeResponse.from(vehicleType);
     }
 
     @Override
-    public VehicleTypeResponse update(VehicleTypeRequest vehicleType) {
-        return null;
+    public VehicleTypeResponse update(String id, VehicleTypeRequest vehicleTypeRequest) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Vehicle Type Not Found"));
+        try {
+            BeanCopyUtils.copyNonNullProperties(vehicleTypeRequest, vehicleType);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException("Failed to update user profile", e);
+        }
+
+        return VehicleTypeResponse.from(vehicleTypeRepository.save(vehicleType));
     }
 
     @Override
-    public void delete(Long id) {
-
+    public void delete(String id) {
+        VehicleType vehicleType = vehicleTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Vehicle Type Not Found"));
+        vehicleTypeRepository.delete(vehicleType);
     }
-
 
 
 }

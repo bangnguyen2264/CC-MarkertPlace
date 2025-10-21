@@ -11,9 +11,9 @@ import java.time.LocalDate;
 @Builder
 public class VehicleResponse {
 
-    private Long id;
+    private String id;
 
-    private Long ownerId;
+    private String ownerId;
 
     private String vin;
 
@@ -32,6 +32,7 @@ public class VehicleResponse {
     private String registrationImageUrl;
 
     private String note;
+    private JourneyResponse journey;
 
     private VehicleTypeResponse vehicleType;
 
@@ -40,6 +41,7 @@ public class VehicleResponse {
                 .id(vehicle.getId())
                 .ownerId(vehicle.getOwnerId())
                 .vehicleType(VehicleTypeResponse.from(vehicle.getVehicleType()))
+                .journey(JourneyResponse.from(vehicle.getJourney()))
                 .vin(vehicle.getVin())
                 .licensePlate(vehicle.getLicensePlate())
                 .registrationNumber(vehicle.getRegistrationNumber())

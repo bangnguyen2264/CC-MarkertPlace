@@ -10,7 +10,7 @@ import java.util.List;
 public interface VehicleService {
     VehicleResponse create(VehicleRequest vehicleRequest);
     List<VehicleResponse> getAll(VehicleFilter vehicleFilter);
-    VehicleResponse getById(Long id);
-    VehicleResponse update(Long id, VehicleRequest vehicleRequest);
-    void delete(Long id);
+    VehicleResponse getById(String id);
+    VehicleResponse update(String id, VehicleRequest vehicleRequest);
+    void delete(String id);
 }

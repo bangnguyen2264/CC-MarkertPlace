@@ -25,7 +25,7 @@ public class UserValidationGateway {
      * @param email  Email của người dùng cần kiểm tra
      * @return CompletableFuture chứa UserValidationResponse
      */
-    public CompletableFuture<UserValidationResponse> validateUser(Long userId, String email) {
+    public CompletableFuture<UserValidationResponse> validateUser(String userId, String email) {
         CompletableFuture<UserValidationResponse> future = new CompletableFuture<>();
 
         try {

@@ -8,9 +8,7 @@ import lombok.ToString;
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class VehicleFilter extends BaseFilter {
-    private Long ownerId;
-    private String vin;
-    private Long vehicleTypeId;
-    private boolean enabled;
+public class JourneyFilter extends BaseFilter {
+    private String journeyId;
+    private String journeyStatus;
 }
