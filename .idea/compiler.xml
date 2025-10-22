@@ -22,6 +22,7 @@
         <module name="verification-service" />
         <module name="vehicle-service" />
         <module name="common-dto" />
+        <module name="wallet-service" />
         <module name="media-service" />
       </profile>
     </annotationProcessing>
@@ -41,6 +42,7 @@
       <module name="user-service" options="" />
       <module name="vehicle-service" options="" />
       <module name="verification-service" options="" />
+      <module name="wallet-service" options="" />
     </option>
   </component>
 </project>

@@ -15,6 +15,7 @@
         <module>user-service</module>
         <module>vehicle-service</module>
         <module>verification-service</module>
+        <module>wallet-service</module>
         <module>media-service</module>
     </modules>
 

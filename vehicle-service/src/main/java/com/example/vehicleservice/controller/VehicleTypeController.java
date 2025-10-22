@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,7 @@ public class VehicleTypeController {
         return ResponseEntity.ok(vehicleTypeService.getById(id));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(value ="/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VehicleTypeResponse> updateVehicleType(@PathVariable String id, @ModelAttribute VehicleTypeRequest vehicleType) {
         return ResponseEntity.ok(vehicleTypeService.update(id, vehicleType));
     }

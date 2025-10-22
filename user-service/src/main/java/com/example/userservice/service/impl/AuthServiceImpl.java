@@ -2,6 +2,7 @@ package com.example.userservice.service.impl;
 
 import com.example.commondto.exception.ConflictException;
 import com.example.commondto.exception.UnauthorizedException;
+import com.example.userservice.integration.WalletIntegrationService;
 import com.example.userservice.model.dto.request.LoginRequest;
 import com.example.userservice.model.dto.request.RegisterRequest;
 import com.example.userservice.model.dto.response.AuthResponse;
@@ -9,6 +10,7 @@ import com.example.userservice.model.entity.User;
 import com.example.userservice.model.security.JwtService;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.AuthService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final WalletIntegrationService walletIntegrationService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
@@ -43,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public String register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new ConflictException("Email already exists");
@@ -59,6 +63,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(user);
+        walletIntegrationService.createWalletForUser(user.getId());
         log.info("User {} registered", user.getUsername());
         return "Success register new user";
     }
@@ -82,4 +87,6 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid refresh token");
         }
     }
+
+
 }

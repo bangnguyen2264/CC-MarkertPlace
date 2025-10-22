@@ -136,7 +136,44 @@ spring:
             - Path=/api/media/**
           filters:
             - JwtAuthenticationFilter
+        # ========== Wallet SERVICE ==========
 
+        # Route cho OpenAPI docs - Pattern 1
+        - id: wallet-service-docs-1
+          uri: lb://wallet-service
+          predicates:
+            - Path=/wallet-service/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
+        - id: wallet-service-docs-2
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallet/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+        # Route cho wallet
+        - id: wallet-service-wallet
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallet/**
+          filters:
+            - JwtAuthenticationFilter
+        # Route cho carbon credit
+        - id: wallet-service-carbon-credit
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/carbon-credit/**
+          filters:
+            - JwtAuthenticationFilter
+        # Route cho audit
+        - id: wallet-service-audit
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/audit/**
+          filters:
+            - JwtAuthenticationFilter
 
 
       globalcors:
@@ -181,6 +218,8 @@ springdoc:
         url: /api/vehicles/v3/api-docs
       - name: Media Service
         url: /api/media/v3/api-docs
+      - name: Wallet Service
+        url: /api/wallet/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha
