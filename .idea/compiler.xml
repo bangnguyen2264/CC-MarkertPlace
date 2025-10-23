@@ -22,7 +22,6 @@
         <module name="verification-service" />
         <module name="vehicle-service" />
         <module name="common-dto" />
-        <module name="wallet-service" />
         <module name="media-service" />
       </profile>
     </annotationProcessing>
