@@ -20,7 +20,9 @@ public class VehicleConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.USER_VALIDATION_RESPONSE,
-            groupId = "${spring.application.name}-group"
+            groupId = "${spring.application.name}-group",
+            containerFactory = "userValidationResponseKafkaListenerFactory"
+
     )
     public void consumeUserValidationResponse(UserValidationResponse response) {
         log.info("Received validation response from user-service: {}", response);

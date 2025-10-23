@@ -10,6 +10,7 @@ import com.example.vehicleservice.model.entity.Journey;
 import com.example.vehicleservice.model.entity.Vehicle;
 import com.example.vehicleservice.model.entity.VehicleType;
 import com.example.vehicleservice.model.filter.VehicleFilter;
+import com.example.vehicleservice.repository.JourneyRepository;
 import com.example.vehicleservice.repository.VehicleRepository;
 import com.example.vehicleservice.repository.VehicleTypeRepository;
 import com.example.vehicleservice.service.VehicleService;
@@ -32,6 +33,7 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
     private final UserValidationGateway validationGateway;
+    private final JourneyRepository journeyRepository;
 
     public VehicleResponse create(VehicleRequest vehicleRequest) {
         log.info("Creating vehicle with request: {}", vehicleRequest);
@@ -52,7 +54,6 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = Vehicle.builder()
                 .ownerId(vehicleRequest.getOwnerId())
                 .vehicleType(vehicleType)
-                .journey(new Journey())
                 .vin(vehicleRequest.getVin())
                 .licensePlate(vehicleRequest.getLicensePlate())
                 .mileage(vehicleRequest.getMileage())
@@ -62,9 +63,17 @@ public class VehicleServiceImpl implements VehicleService {
                 .color(vehicleRequest.getColor())
                 .note(vehicleRequest.getNote())
                 .build();
-
+        Journey journey = Journey.builder()
+                .vehicle(vehicle)
+                .distanceKm(0.0)
+                .averageSpeed(0.0)
+                .energyUsed(0.0)
+                .co2Reduced(0.0)
+                .build();
+        vehicle.setJourney(journey);
         log.info("Saving vehicle: {}", vehicle);
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        journeyRepository.save(journey);
         log.info("Vehicle saved successfully with id: {}", savedVehicle.getId());
 
         return VehicleResponse.from(savedVehicle);

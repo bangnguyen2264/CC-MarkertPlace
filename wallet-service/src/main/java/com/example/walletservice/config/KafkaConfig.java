@@ -29,18 +29,6 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    /**
-     * Tạo ConsumerFactory với cấu hình rõ ràng
-     */
-    @Bean
-    public ConsumerFactory<String, WalletCreationRequest> walletCreationConsumerFactory() {
-        return createConsumerFactory(WalletCreationRequest.class);
-    }
-
-    @Bean
-    public ConsumerFactory<String, UserValidationRequest> userValidationConsumerFactory() {
-        return createConsumerFactory(UserValidationRequest.class);
-    }
 
     private <T> ConsumerFactory<String, T> createConsumerFactory(Class<T> clazz) {
         Map<String, Object> config = new HashMap<>();
@@ -55,6 +43,20 @@ public class KafkaConfig {
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         return new DefaultKafkaConsumerFactory<>(config);
+    }
+
+    /**
+     * Tạo ConsumerFactory với cấu hình rõ ràng
+     */
+
+    @Bean
+    public ConsumerFactory<String, WalletCreationRequest> walletCreationConsumerFactory() {
+        return createConsumerFactory(WalletCreationRequest.class);
+    }
+
+    @Bean
+    public ConsumerFactory<String, UserValidationRequest> userValidationConsumerFactory() {
+        return createConsumerFactory(UserValidationRequest.class);
     }
 
     @Bean

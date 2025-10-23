@@ -1,6 +1,8 @@
-package com.example.userservice.config;
+package com.example.vehicleservice.config;
 
 import com.example.commondto.dto.request.UserValidationRequest;
+import com.example.commondto.dto.request.WalletCreationRequest;
+import com.example.commondto.dto.response.UserValidationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -11,7 +13,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
@@ -29,50 +30,40 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    /**
-     * Tạo ConsumerFactory với cấu hình rõ ràng
-     */
-    @Bean
-    public ConsumerFactory<String, UserValidationRequest> consumerFactory() {
-        Map<String, Object> config = new HashMap<>();
 
+    private <T> ConsumerFactory<String, T> createConsumerFactory(Class<T> clazz) {
+        Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-
-        // Cấu hình cho ErrorHandlingDeserializer
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-
-        // Cấu hình cho JsonDeserializer
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.example.commondto.dto.*");
-        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, UserValidationRequest.class.getName());
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, clazz.getName());
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
-        log.info("ConsumerFactory created with bootstrap servers: {}", bootstrapServers);
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
     /**
-     * Tạo container factory cho listener
+     * Tạo ConsumerFactory với cấu hình rõ ràng
      */
+
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, UserValidationRequest>
-    kafkaListenerContainerFactory(ConsumerFactory<String, UserValidationRequest> consumerFactory) {
+    public ConsumerFactory<String, UserValidationResponse> userValidationResponseConsumerFactory() {
+        return createConsumerFactory(UserValidationResponse.class);
+    }
 
-        ConcurrentKafkaListenerContainerFactory<String, UserValidationRequest> factory =
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, UserValidationResponse> userValidationResponseKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, UserValidationResponse> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-
-        factory.setConsumerFactory(consumerFactory);
-        factory.setBatchListener(false);
-        factory.setConcurrency(3);
-
-        // Error handler
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler();
-        factory.setCommonErrorHandler(errorHandler);
-
-        log.info("KafkaListenerContainerFactory created for vehicle-service");
+        factory.setConsumerFactory(userValidationResponseConsumerFactory());
         return factory;
     }
+
+
+
 }

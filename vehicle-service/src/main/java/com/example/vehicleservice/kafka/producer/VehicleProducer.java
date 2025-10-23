@@ -13,7 +13,7 @@ public class VehicleProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void sendCreateWalletResponse(boolean success) {
-        kafkaTemplate.send(KafkaTopics.WALLET_CREATION_RESPONSE, success);
+    public void sendUserValidationRequest(UserValidationRequest userValidationRequest) {
+        kafkaTemplate.send(KafkaTopics.USER_VALIDATION_REQUEST, userValidationRequest);
     }
 }

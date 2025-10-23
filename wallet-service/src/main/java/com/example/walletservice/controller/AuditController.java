@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/carbon-credit")
+@RequestMapping("/api/audit")
 @RequiredArgsConstructor
 public class AuditController {
     private final AuditService auditService;
