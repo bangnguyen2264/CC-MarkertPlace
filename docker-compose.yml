@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 🟢 PostgreSQL Database
   postgres:
     image: postgres:13-alpine
     container_name: postgres
@@ -21,7 +20,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 🔵 Redis Cache
   redis:
     image: redis:7-alpine
     container_name: gateway-redis
@@ -38,7 +36,6 @@ services:
     networks:
       - microservices-network
 
-  # 🟠 Zookeeper (Kafka dependency)
   zookeeper:
     image: wurstmeister/zookeeper:latest
     container_name: zookeeper
@@ -46,13 +43,13 @@ services:
       - "2181:2181"
     networks:
       - microservices-network
+    restart: unless-stopped  # ✅ Thêm restart policy
     healthcheck:
-      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]  # ✅ Fix healthcheck
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # 🟣 Kafka Broker
   kafka:
     image: wurstmeister/kafka:latest
     container_name: kafka
@@ -65,7 +62,9 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy  # ✅ Đợi Zookeeper healthy
+    restart: unless-stopped  # ✅ Tự động restart nếu fail
     networks:
       - microservices-network
     healthcheck:
@@ -73,6 +72,7 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+      start_period: 30s  # ✅ Cho Kafka thời gian khởi động
 
 networks:
   microservices-network:
