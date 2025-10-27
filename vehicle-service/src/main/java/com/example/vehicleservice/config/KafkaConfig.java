@@ -1,7 +1,5 @@
 package com.example.vehicleservice.config;
 
-import com.example.commondto.dto.request.UserValidationRequest;
-import com.example.commondto.dto.request.WalletCreationRequest;
 import com.example.commondto.dto.response.UserValidationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

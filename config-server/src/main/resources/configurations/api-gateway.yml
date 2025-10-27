@@ -260,7 +260,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,gateway
+        include: health,info,prometheus  # Expose prometheus endpoint
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: always

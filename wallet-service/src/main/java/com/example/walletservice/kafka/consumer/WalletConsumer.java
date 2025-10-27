@@ -33,6 +33,7 @@ public class WalletConsumer {
                     .ownerId(request.getOwnerId())
                     .success(false)
                     .message("Owner ID is missing")
+                    .correlationId(request.getCorrelationId())
                     .build());
             return;
         }
@@ -44,6 +45,7 @@ public class WalletConsumer {
                 .ownerId(request.getOwnerId())
                 .success(true)
                 .message("Wallet and CarbonCredit created successfully")
+                .correlationId(request.getCorrelationId())
                 .build());
     }
 }

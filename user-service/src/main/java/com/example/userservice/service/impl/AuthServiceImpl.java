@@ -7,7 +7,7 @@ import com.example.userservice.model.dto.request.LoginRequest;
 import com.example.userservice.model.dto.request.RegisterRequest;
 import com.example.userservice.model.dto.response.AuthResponse;
 import com.example.userservice.model.entity.User;
-import com.example.userservice.model.security.JwtService;
+import com.example.userservice.security.JwtService;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.AuthService;
 import jakarta.transaction.Transactional;
@@ -63,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(user);
-        walletIntegrationService.createWalletForUser(user.getId());
+        walletIntegrationService.createWallet(user.getId());
         log.info("User {} registered", user.getUsername());
         return "Success register new user";
     }

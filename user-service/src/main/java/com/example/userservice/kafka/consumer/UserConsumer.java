@@ -20,10 +20,11 @@ public class UserConsumer {
 
     @KafkaListener(
             topics = KafkaTopics.USER_VALIDATION_REQUEST,
-            groupId = "${spring.application.name}-group"
+            groupId = "${spring.application.name}-group",
+            containerFactory = "userValidationKafkaListenerFactory"
     )
     public void consumeUserValidationRequest(UserValidationRequest request) {
-        log.info("📩 Received user validation request: {}", request);
+        log.info("📩 Received user validation request with correlationId={}: {}", request.getCorrelationId(), request);
 
         boolean exists = false;
         String message;
@@ -32,25 +33,26 @@ public class UserConsumer {
         if (request.getUserId() != null) {
             exists = userRepository.existsById(request.getUserId());
             message = exists
-                    ? "✅ User ID exists"
-                    : "❌ User ID not found: " + request.getUserId();
+                    ? "User ID exists"
+                    : "User ID not found: " + request.getUserId();
         }
         // Nếu có email thì kiểm tra theo email
         else if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             exists = userRepository.existsByEmail(request.getEmail());
             message = exists
-                    ? "✅ Email exists"
-                    : "❌ Email not found: " + request.getEmail();
+                    ? "Email exists"
+                    : "Email not found: " + request.getEmail();
         }
         // Nếu cả hai đều null
         else {
             message = "⚠️ No userId or email provided for validation";
         }
 
-        // Tạo phản hồi
+        // Tạo phản hồi với correlationId từ request
         UserValidationResponse response = UserValidationResponse.builder()
                 .valid(exists)
                 .message(message)
+                .correlationId(request.getCorrelationId()) // Copy correlationId
                 .build();
 
         log.info("📤 Sending validation result: {}", response);

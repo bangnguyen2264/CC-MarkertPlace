@@ -61,3 +61,13 @@ springdoc:
   server:
     url: http://localhost:8222
     description: API Gateway (Development)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus  # Expose prometheus endpoint
+  metrics:
+    export:
+      prometheus:
+        enabled: true

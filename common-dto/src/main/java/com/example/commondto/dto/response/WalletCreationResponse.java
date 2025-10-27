@@ -1,13 +1,15 @@
 package com.example.commondto.dto.response;
 
+import com.example.commondto.dto.request.BaseMessageKafka;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Getter
-@Setter
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class WalletCreationResponse {
+@SuperBuilder
+public class WalletCreationResponse extends BaseMessageKafka {
     private String ownerId;
     private boolean success;
     private String message;

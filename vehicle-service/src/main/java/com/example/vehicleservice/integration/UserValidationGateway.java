@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -29,29 +30,32 @@ public class UserValidationGateway {
         CompletableFuture<UserValidationResponse> future = new CompletableFuture<>();
 
         try {
-            // Tạo yêu cầu kiểm tra
-            UserValidationRequest request = UserValidationRequest.builder()
-                    .userId(userId)
-                    .email(email)
-                    .build();
+            // Tạo yêu cầu kiểm tra, correlationId tự sinh trong AbstractKafkaMessage
+            UserValidationRequest request = UserValidationRequest.builder().userId(userId).email(email).build();
 
-            // Gửi yêu cầu tới user-service
-            log.info("[Gateway] Sending validation request for userId={}, email={}", userId, email);
-            producer.sendUserValidationRequest(request);
-
-            // Đăng ký callback để nhận phản hồi từ consumer
-            consumer.registerCallback(response -> {
+            // Đăng ký callback với correlationId
+            consumer.registerCallback(request.getCorrelationId(), response -> {
                 if (response != null) {
-                    log.info("[Gateway] Received response: {}", response);
+                    log.info("[Gateway] Received response for correlationId={}: {}", response.getCorrelationId(), response);
                     future.complete(response);
                 } else {
-                    log.warn("[Gateway] No response received from user-service");
+                    log.warn("[Gateway] No response received for correlationId={}", request.getCorrelationId());
                     future.complete(createErrorResponse("No response received from user-service"));
                 }
             });
 
+            // Gửi yêu cầu tới user-service
+            log.info("[Gateway] Sending validation request for userId={}, email={}, correlationId={}", userId, email, request.getCorrelationId());
+            producer.sendUserValidationRequest(request);
+
+            // Thêm timeout cho future
+            future.orTimeout(30, TimeUnit.SECONDS).exceptionally(throwable -> {
+                log.error("[Gateway] Timeout for correlationId={}", request.getCorrelationId(), throwable);
+                return createErrorResponse("Timeout waiting for response from user-service");
+            });
+
         } catch (Exception e) {
-            log.error("[Gateway] Error during user validation: {}", e.getMessage(), e);
+            log.error("[Gateway] Error during user validation for userId={}, email={}: {}", userId, email, e.getMessage(), e);
             future.complete(createErrorResponse("Internal error during validation"));
         }
 
@@ -65,9 +69,6 @@ public class UserValidationGateway {
      * @return UserValidationResponse với trạng thái không hợp lệ
      */
     private UserValidationResponse createErrorResponse(String message) {
-        return UserValidationResponse.builder()
-                .valid(false)
-                .message(message)
-                .build();
+        return UserValidationResponse.builder().valid(false).message(message).build();
     }
 }
