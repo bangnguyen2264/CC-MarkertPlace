@@ -1,7 +1,7 @@
 package com.example.verificationservice.config;
 
-import com.example.commondto.dto.response.UserValidationResponse;
 import com.example.commondto.dto.request.VerifyCreationRequest;
+import com.example.commondto.dto.response.UserValidationResponse;
 import com.example.commondto.dto.response.WalletCreationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -33,10 +33,6 @@ public class KafkaConfig {
     /**
      * Tạo ConsumerFactory với cấu hình rõ ràng
      */
-    @Bean
-    public ConsumerFactory<String, WalletCreationResponse> walletCreationConsumerFactory() {
-        return createConsumerFactory(WalletCreationResponse.class);
-    }
 
     @Bean
     public ConsumerFactory<String, UserValidationResponse> userValidationConsumerFactory() {
@@ -63,13 +59,6 @@ public class KafkaConfig {
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, WalletCreationResponse> walletCreationKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, WalletCreationResponse> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(walletCreationConsumerFactory());
-        return factory;
-    }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, UserValidationResponse> userValidationKafkaListenerFactory() {

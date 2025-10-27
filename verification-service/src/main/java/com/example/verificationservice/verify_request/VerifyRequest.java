@@ -1,6 +1,7 @@
 package com.example.verificationservice.verify_request;
 
 
+
 import com.example.commondto.constant.VerifyStatus;
 import com.example.commondto.constant.VerifyType;
 import com.example.commondto.entity.BaseEntity;
