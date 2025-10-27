@@ -28,7 +28,7 @@ public class WalletController {
 
     // 🟢 Lấy ví theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<WalletResponse> getById(@PathVariable String id) {
+    public ResponseEntity<WalletResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(walletService.getById(id));
     }
 
@@ -41,7 +41,7 @@ public class WalletController {
     // 🟢 Cập nhật số dư ví (nạp hoặc rút)
     @PatchMapping(value ="/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<WalletResponse> update(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @ModelAttribute WalletUpdateRequest request
     ) {
         return ResponseEntity.ok(walletService.update(id, request));

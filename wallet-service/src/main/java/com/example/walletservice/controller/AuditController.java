@@ -27,7 +27,7 @@ public class AuditController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AuditResponse> getById(@PathVariable String id) {
+    public ResponseEntity<AuditResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(auditService.getById(id));
     }
 }

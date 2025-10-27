@@ -35,17 +35,17 @@ public class VehicleTypeController {
         return ResponseEntity.ok(vehicleTypeService.getAll(vehicleTypeFilter));
     }
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleTypeResponse> getVehicleTypeById(@PathVariable String id) {
+    public ResponseEntity<VehicleTypeResponse> getVehicleTypeById(@PathVariable("id") String id) {
         return ResponseEntity.ok(vehicleTypeService.getById(id));
     }
 
     @PatchMapping(value ="/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<VehicleTypeResponse> updateVehicleType(@PathVariable String id, @ModelAttribute VehicleTypeRequest vehicleType) {
+    public ResponseEntity<VehicleTypeResponse> updateVehicleType(@PathVariable("id") String id, @ModelAttribute VehicleTypeRequest vehicleType) {
         return ResponseEntity.ok(vehicleTypeService.update(id, vehicleType));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVehicleType(@PathVariable String id) {
+    public ResponseEntity<Void> deleteVehicleType(@PathVariable("id") String id) {
         vehicleTypeService.delete(id);
         return ResponseEntity.noContent().build();
     }

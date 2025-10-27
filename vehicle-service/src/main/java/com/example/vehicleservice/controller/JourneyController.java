@@ -35,14 +35,14 @@ public class JourneyController {
 //    // 🔹 Lấy thông tin 1 hành trình cụ thể
 //    @GetMapping("/{id}")
 //    @Operation(summary = "Get journey by id")
-//    public ResponseEntity<JourneyResponse> getJourneyById(@PathVariable String id) {
+//    public ResponseEntity<JourneyResponse> getJourneyById(@PathVariable("id") String id) {
 //        return ResponseEntity.ok(journeyService.getJourneyById(id));
 //    }
 
     // 🔹 Lấy lịch sử của 1 hành trình cụ thể
     @GetMapping("/{id}")
     @Operation(summary = "Get journey history by journey id")
-    public ResponseEntity<JourneyHistoryResponse> getJourneyHistoryByJourneyId(@PathVariable String id) {
+    public ResponseEntity<JourneyHistoryResponse> getJourneyHistoryByJourneyId(@PathVariable("id") String id) {
         return ResponseEntity.ok(journeyService.getJourneyHistoryByJourneyId(id));
     }
 
@@ -62,7 +62,7 @@ public class JourneyController {
     )
     @Operation(summary = "Update journey history (multipart/form-data)")
     public ResponseEntity<JourneyHistoryResponse> updateJourneyHistory(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @ModelAttribute UpdateJourneyHistoryRequest request
     ) throws IOException {
 
@@ -73,7 +73,7 @@ public class JourneyController {
     // 🔹 Xóa lịch sử hành trình
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete journey history")
-    public ResponseEntity<Void> deleteJourneyHistory(@PathVariable String id) {
+    public ResponseEntity<Void> deleteJourneyHistory(@PathVariable("id") String id) {
         journeyService.deleteJourneyHistory(id);
         return ResponseEntity.noContent().build();
     }

@@ -28,7 +28,7 @@ public class CarbonCreditController {
 
     // 🟢 Lấy tín chỉ carbon theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<CarbonCreditResponse> getById(@PathVariable String id) {
+    public ResponseEntity<CarbonCreditResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(carbonCreditService.getById(id));
     }
 
@@ -41,7 +41,7 @@ public class CarbonCreditController {
     // 🟢 Cập nhật số tín chỉ (nạp hoặc giao dịch)
     @PatchMapping(value ="/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CarbonCreditResponse> update(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @ModelAttribute CarbonCreditUpdateRequest request
     ) {
         return ResponseEntity.ok(carbonCreditService.update(id, request));

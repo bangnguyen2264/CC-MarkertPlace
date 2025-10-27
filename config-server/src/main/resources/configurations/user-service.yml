@@ -2,6 +2,8 @@ server:
   port: 8081
 
 spring:
+  main:
+    web-application-type: servlet
   application:
     name: user-service
 

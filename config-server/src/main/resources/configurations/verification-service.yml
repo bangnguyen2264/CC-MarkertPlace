@@ -2,6 +2,8 @@ server:
   port: 8083
 
 spring:
+  main:
+    web-application-type: servlet
   application:
     name: verification-service
 
@@ -33,6 +35,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 eureka:
   client:

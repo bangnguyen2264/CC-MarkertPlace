@@ -1,6 +1,7 @@
 package com.example.vehicleservice.config;
 
 import com.example.commondto.dto.response.UserValidationResponse;
+import com.example.commondto.dto.response.VerifyCreationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -59,6 +60,19 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, UserValidationResponse> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(userValidationResponseConsumerFactory());
+        return factory;
+    }
+    @Bean
+    public ConsumerFactory<String, VerifyCreationResponse> verifyCreationResponseConsumerFactory() {
+        return createConsumerFactory(VerifyCreationResponse.class);
+    }
+
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, VerifyCreationResponse> verifyCreationResponseKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, VerifyCreationResponse> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(verifyCreationResponseConsumerFactory());
         return factory;
     }
 

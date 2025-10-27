@@ -1,7 +1,6 @@
 package com.example.apigateway;
 
 import lombok.extern.slf4j.Slf4j;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     private final JwtProperties jwtProperties;
     private final SecurityRuleMatcher ruleMatcher;
 
-    // ✅ BẮT BUỘC phải có super(Config.class)
     public JwtAuthenticationFilter(JwtUtil jwtUtil, JwtProperties jwtProperties, SecurityRuleMatcher ruleMatcher) {
         super(Config.class);
         this.jwtUtil = jwtUtil;
@@ -36,7 +34,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             SecurityRule rule = ruleMatcher.match(path, request.getMethod());
 
             // 🔓 Nếu là PUBLIC → bỏ qua xác thực
-            if (rule != null && "PUBLIC".equalsIgnoreCase(rule.getAccess())) {
+            if (rule != null && isPublicAccess(rule)) {
                 log.debug("Public endpoint: {} {}", method, path);
                 return chain.filter(exchange);
             }
@@ -56,8 +54,8 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             String role = jwtUtil.extractRole(token);
 
             // ⚖️ Kiểm tra role
-            if (rule != null && !rule.getAccess().contains(role)) {
-                return onError(exchange, "Forbidden: role not allowed", HttpStatus.FORBIDDEN);
+            if (rule != null && !hasRequiredRole(rule, role)) {
+                return onError(exchange, "Forbidden: insufficient permissions", HttpStatus.FORBIDDEN);
             }
 
             ServerHttpRequest modifiedRequest = request.mutate()
@@ -69,6 +67,26 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         };
     }
 
+    private boolean isPublicAccess(SecurityRule rule) {
+        return rule.getRoles() != null &&
+                rule.getRoles().stream().anyMatch("PUBLIC"::equalsIgnoreCase);
+    }
+
+    private boolean hasRequiredRole(SecurityRule rule, String userRole) {
+        if (rule.getRoles() == null || rule.getRoles().isEmpty()) {
+            return true; // Nếu không định nghĩa role → cho phép tất cả
+        }
+
+        // Nếu có PUBLIC → cho phép tất cả
+        if (isPublicAccess(rule)) {
+            return true;
+        }
+
+        // Kiểm tra role cụ thể
+        return rule.getRoles().stream()
+                .anyMatch(r -> r.equalsIgnoreCase(userRole));
+    }
+
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
@@ -78,9 +96,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         );
     }
 
-    // ✅ Bắt buộc phải có inner static class Config
     public static class Config {
-        // có thể để trống, nhưng phải có public no-args constructor
         public Config() {
         }
     }

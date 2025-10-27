@@ -2,6 +2,9 @@ server:
   port: 8222
 
 spring:
+  main:
+    web-application-type: reactive
+
   application:
     name: api-gateway
   autoconfigure:
@@ -27,151 +30,127 @@ spring:
           lower-case-service-id: true
       security:
         rules:
-
           - path: /api/media/get/**
-            method: GET
-            access: PUBLIC
+            method: [GET]
+            access: [PUBLIC]
           - path: /api/admin/**
-            method: ANY
-            access: ADMIN
+            method: [ANY]
+            access: [ADMIN]
+          - path: /api/verify-requests/**
+            method: [GET, DELETE, PATCH]
+            access: [ADMIN, CVA]
 
       routes:
-        # ========== USER SERVICE ==========
 
-        # Route cho OpenAPI docs - Pattern 1
-        - id: user-service-docs-1
-          uri: lb://user-service
-          predicates:
-            - Path=/user-service/v3/api-docs
-          filters:
-            - SetPath=/v3/api-docs
-
-        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
-        - id: user-service-docs-2
+        # ================= USER SERVICE =================
+        - id: user-service-docs
           uri: lb://user-service
           predicates:
             - Path=/api/users/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
 
-        # Route cho authentication
         - id: user-service-auth
           uri: lb://user-service
           predicates:
             - Path=/api/auth/**
 
-        # Route cho users - ĐẶT SAU CÙNG
         - id: user-service-users
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
+          filters:
+            - JwtAuthenticationFilter
+
         - id: user-service-customer
           uri: lb://user-service
           predicates:
-          - Path=/api/customer/**
-        # ========== VEHICLE SERVICE ==========
-
-        # Route cho OpenAPI docs - Pattern 1
-        - id: vehicle-service-docs-1
-          uri: lb://vehicle-service
-          predicates:
-            - Path=/vehicle-service/v3/api-docs
+            - Path=/api/customer/**
           filters:
-            - SetPath=/v3/api-docs
+            - JwtAuthenticationFilter
 
-        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
-        - id: vehicle-service-docs-2
+
+        # ================= VEHICLE SERVICE =================
+        - id: vehicle-service-docs
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicles/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
-        # Route cho vehicle
+
         - id: vehicle-service-vehicles
-          uri: lb://vehicle-service
-          predicates:
-          - Path=/api/vehicles/**
-          filters:
-            - JwtAuthenticationFilter
-        - id: vehicle-service-types
-          uri: lb://vehicle-service
-          predicates:
-            - Path=/api/vehicle-types/**
-          filters:
-            - JwtAuthenticationFilter
-        # Route cho journey
-        - id: vehicle-service-journey
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicles/**
           filters:
             - JwtAuthenticationFilter
-        - id: vehicle-service-types
+
+        - id: journey-service
           uri: lb://vehicle-service
           predicates:
             - Path=/api/journeys/**
           filters:
             - JwtAuthenticationFilter
-        # ========== MEDIA SERVICE ==========
 
-        # Route cho OpenAPI docs - Pattern 1
-        - id: media-service-docs-1
-          uri: lb://media-service
-          predicates:
-            - Path=/media-service/v3/api-docs
-          filters:
-            - SetPath=/v3/api-docs
 
-        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
-        - id: media-service-docs-2
+        # ================= MEDIA SERVICE =================
+        - id: media-service-docs
           uri: lb://media-service
           predicates:
             - Path=/api/media/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
-        # Route cho vehicle
+
         - id: media-service-media
           uri: lb://media-service
           predicates:
             - Path=/api/media/**
           filters:
             - JwtAuthenticationFilter
-        # ========== Wallet SERVICE ==========
 
-        # Route cho OpenAPI docs - Pattern 1
-        - id: wallet-service-docs-1
-          uri: lb://wallet-service
-          predicates:
-            - Path=/wallet-service/v3/api-docs
-          filters:
-            - SetPath=/v3/api-docs
 
-        # Route cho OpenAPI docs - Pattern 2 (cho Swagger UI mặc định)
-        - id: wallet-service-docs-2
+        # ================= WALLET SERVICE =================
+        - id: wallet-service-docs
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallet/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
-        # Route cho wallet
+
         - id: wallet-service-wallet
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallet/**
           filters:
             - JwtAuthenticationFilter
-        # Route cho carbon credit
+
         - id: wallet-service-carbon-credit
           uri: lb://wallet-service
           predicates:
             - Path=/api/carbon-credit/**
           filters:
             - JwtAuthenticationFilter
-        # Route cho audit
+
         - id: wallet-service-audit
           uri: lb://wallet-service
           predicates:
             - Path=/api/audit/**
+          filters:
+            - JwtAuthenticationFilter
+
+
+        # ================= VERIFICATION SERVICE =================
+        - id: verification-service-docs
+          uri: lb://verification-service
+          predicates:
+            - Path=/api/verify-requests/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: verification-service
+          uri: lb://verification-service
+          predicates:
+            - Path=/api/verify-requests/**
           filters:
             - JwtAuthenticationFilter
 
@@ -220,6 +199,8 @@ springdoc:
         url: /api/media/v3/api-docs
       - name: Wallet Service
         url: /api/wallet/v3/api-docs
+      - name: Verification Service
+        url: /api/verify-requests/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha

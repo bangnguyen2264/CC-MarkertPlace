@@ -31,7 +31,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleResponse> getById(@PathVariable String id) {
+    public ResponseEntity<VehicleResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(vehicleService.getById(id));
     }
 
@@ -43,14 +43,14 @@ public class VehicleController {
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Cập nhật thông tin xe", description = "Cập nhật dữ liệu xe với multipart/form-data")
     public ResponseEntity<VehicleResponse> update(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @ModelAttribute VehicleRequest vehicleRequest // dùng @ModelAttribute cho multipart
     ) {
         return ResponseEntity.ok(vehicleService.update(id, vehicleRequest));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
         vehicleService.delete(id);
         return ResponseEntity.noContent().build();
     }

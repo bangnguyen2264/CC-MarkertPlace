@@ -3,7 +3,7 @@ package com.example.vehicleservice.service.impl;
 import com.example.commondto.dto.response.UserValidationResponse;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.BeanCopyUtils;
-import com.example.vehicleservice.integration.UserValidationGateway;
+import com.example.vehicleservice.integration.UserValidationIntegration;
 import com.example.vehicleservice.model.dto.request.VehicleRequest;
 import com.example.vehicleservice.model.dto.response.VehicleResponse;
 import com.example.vehicleservice.model.entity.Journey;
@@ -32,13 +32,13 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
-    private final UserValidationGateway validationGateway;
+    private final UserValidationIntegration userValidationIntegration;
     private final JourneyRepository journeyRepository;
 
     public VehicleResponse create(VehicleRequest vehicleRequest) {
         log.info("Creating vehicle with request: {}", vehicleRequest);
 
-        UserValidationResponse response = validationGateway.validateUser(vehicleRequest.getOwnerId(), null).join();
+        UserValidationResponse response = userValidationIntegration.validateUser(vehicleRequest.getOwnerId(), null).join();
 
         if (response == null || !response.isValid()) {
             throw new NotFoundException("User validation failed: " +
