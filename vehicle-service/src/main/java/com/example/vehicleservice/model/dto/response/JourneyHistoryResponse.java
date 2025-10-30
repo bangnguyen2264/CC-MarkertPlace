@@ -1,9 +1,11 @@
 package com.example.vehicleservice.model.dto.response;
 
-import com.example.vehicleservice.model.constants.JourneyStatus;
+import com.example.commondto.constant.Status;
 import com.example.vehicleservice.model.entity.JourneyHistory;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -12,9 +14,9 @@ public class JourneyHistoryResponse {
     private Double newDistance;
     private Double averageSpeed;
     private Double energyUsed;
-    private String certificateImageUrl;
+    private List<String> certificateImageUrl;
     private String updatedBy; // CVA hoặc Admin
-    private JourneyStatus status;
+    private Status status;
 
     public static JourneyHistoryResponse from (JourneyHistory journeyHistory) {
         return JourneyHistoryResponse.builder()

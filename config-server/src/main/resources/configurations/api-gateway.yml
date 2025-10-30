@@ -77,14 +77,18 @@ spring:
             - Path=/api/vehicles/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
-
         - id: vehicle-service-vehicles
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicles/**
           filters:
             - JwtAuthenticationFilter
-
+        - id: vehicle-service-vehicle-types
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicle-types/**
+          filters:
+            - JwtAuthenticationFilter
         - id: journey-service
           uri: lb://vehicle-service
           predicates:

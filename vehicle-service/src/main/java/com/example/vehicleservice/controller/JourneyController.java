@@ -1,9 +1,8 @@
 package com.example.vehicleservice.controller;
 
 import com.example.vehicleservice.model.dto.request.JourneyHistoryRequest;
-import com.example.vehicleservice.model.dto.request.UpdateJourneyHistoryRequest;
+import com.example.commondto.dto.request.UpdateStatusRequest;
 import com.example.vehicleservice.model.dto.response.JourneyHistoryResponse;
-import com.example.vehicleservice.model.dto.response.JourneyResponse;
 import com.example.vehicleservice.model.filter.JourneyFilter;
 import com.example.vehicleservice.service.JourneyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,7 +45,7 @@ public class JourneyController {
     }
 
     // 🔹 Tạo mới lịch sử hành trình
-    @PostMapping("/{id}")
+    @PostMapping
     @Operation(summary = "Create journey history")
     public ResponseEntity<JourneyHistoryResponse> createJourneyHistory(
             @RequestBody JourneyHistoryRequest request
@@ -63,7 +61,7 @@ public class JourneyController {
     @Operation(summary = "Update journey history (multipart/form-data)")
     public ResponseEntity<JourneyHistoryResponse> updateJourneyHistory(
             @PathVariable("id") String id,
-            @ModelAttribute UpdateJourneyHistoryRequest request
+            @ModelAttribute UpdateStatusRequest request
     ) throws IOException {
 
 

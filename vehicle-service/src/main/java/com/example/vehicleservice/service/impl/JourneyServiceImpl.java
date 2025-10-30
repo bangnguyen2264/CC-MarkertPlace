@@ -1,12 +1,13 @@
 package com.example.vehicleservice.service.impl;
 
+import com.example.commondto.constant.Status;
+import com.example.commondto.dto.request.UpdateStatusRequest;
 import com.example.commondto.exception.ConflictException;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.BeanCopyUtils;
 import com.example.commondto.utils.CrudUtils;
-import com.example.vehicleservice.model.constants.JourneyStatus;
+import com.example.vehicleservice.integration.VerifyCreationIntegration;
 import com.example.vehicleservice.model.dto.request.JourneyHistoryRequest;
-import com.example.vehicleservice.model.dto.request.UpdateJourneyHistoryRequest;
 import com.example.vehicleservice.model.dto.response.JourneyHistoryResponse;
 import com.example.vehicleservice.model.dto.response.JourneyResponse;
 import com.example.vehicleservice.model.entity.Journey;
@@ -15,6 +16,7 @@ import com.example.vehicleservice.model.filter.JourneyFilter;
 import com.example.vehicleservice.repository.JourneyHistoryRepository;
 import com.example.vehicleservice.repository.JourneyRepository;
 import com.example.vehicleservice.service.JourneyService;
+import com.example.vehicleservice.utils.ConvertHelper;
 import com.example.vehicleservice.utils.JourneyUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 public class JourneyServiceImpl implements JourneyService {
     private final JourneyRepository journeyRepository;
     private final JourneyHistoryRepository journeyHistoryRepository;
+    private final VerifyCreationIntegration verifyCreationIntegration;
+    private final ConvertHelper convertHelper;
 
     @Override
     public List<JourneyHistoryResponse> getAllJourneyHistory(JourneyFilter journeyFilter) {
@@ -80,27 +84,27 @@ public class JourneyServiceImpl implements JourneyService {
         );
         JourneyHistory journeyHistory = JourneyHistoryRequest.to(journeyHistoryRequest);
         journeyHistory.setJourney(journey);
+        journeyHistoryRepository.save(journeyHistory);
+        verifyCreationIntegration.createVerify(convertHelper.convertToVerifyCreationRequest(journeyHistory));
 
-        return JourneyHistoryResponse.from(journeyHistoryRepository.save(journeyHistory));
+        return JourneyHistoryResponse.from(journeyHistory);
     }
 
     @Override
     @Transactional
-    public JourneyHistoryResponse updateJourneyHistory(String id, UpdateJourneyHistoryRequest request) {
+    public JourneyHistoryResponse updateJourneyHistory(String id, UpdateStatusRequest request) {
         JourneyHistory journeyHistory = journeyHistoryRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Journey with id " + id + " not found")
         );
-        if (request.getStatus() == JourneyStatus.VERIFIED) {
+        if (request.getStatus() == Status.APPROVED) {
             _asyncJourney(journeyHistory);
         } else if (request.getStatus() == journeyHistory.getStatus()) {
             throw new ConflictException("This journey history status is not changed");
         }
 
-        try {
-            BeanCopyUtils.copyNonNullProperties(request, journeyHistory);
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException("Failed to update journey", e);
-        }
+        journeyHistory.setStatus(request.getStatus());
+        journeyHistory.setNote(request.getNote());
+        journeyHistoryRepository.save(journeyHistory);
 
         return JourneyHistoryResponse.from(journeyHistoryRepository.save(journeyHistory));
     }

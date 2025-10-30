@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: false
 
   kafka:
@@ -49,11 +49,6 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-
-logging:
-  level:
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: DEBUG
 
 management:
   endpoints:

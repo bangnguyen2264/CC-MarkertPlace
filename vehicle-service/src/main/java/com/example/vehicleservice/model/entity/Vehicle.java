@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "vehicles")
@@ -40,7 +41,7 @@ public class Vehicle extends BaseEntity {
 
     private boolean verified = false;
 
-    private String registrationImageUrl;
+    private List<String> registrationImageUrl;
 
     private String note;
     // Liên kết 1–1 tới Vehicle
