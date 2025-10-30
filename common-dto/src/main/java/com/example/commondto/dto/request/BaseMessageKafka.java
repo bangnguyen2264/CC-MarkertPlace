@@ -1,5 +1,6 @@
 package com.example.commondto.dto.request;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -8,7 +9,8 @@ import java.util.UUID;
 @Data
 @SuperBuilder
 public abstract class BaseMessageKafka {
-    private String correlationId;
+    @Builder.Default
+    private String correlationId = UUID.randomUUID().toString();
 
     public BaseMessageKafka() {
         if (this.correlationId == null) {

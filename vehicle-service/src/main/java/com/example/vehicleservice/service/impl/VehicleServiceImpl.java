@@ -1,9 +1,11 @@
 package com.example.vehicleservice.service.impl;
 
+import com.example.commondto.constant.Status;
+import com.example.commondto.dto.request.UpdateStatusRequest;
 import com.example.commondto.dto.response.UserValidationResponse;
 import com.example.commondto.exception.NotFoundException;
-import com.example.commondto.utils.BeanCopyUtils;
 import com.example.vehicleservice.integration.UserValidationIntegration;
+import com.example.vehicleservice.integration.VerifyCreationIntegration;
 import com.example.vehicleservice.model.dto.request.VehicleRequest;
 import com.example.vehicleservice.model.dto.response.VehicleResponse;
 import com.example.vehicleservice.model.entity.Journey;
@@ -13,8 +15,10 @@ import com.example.vehicleservice.model.filter.VehicleFilter;
 import com.example.vehicleservice.repository.JourneyRepository;
 import com.example.vehicleservice.repository.VehicleRepository;
 import com.example.vehicleservice.repository.VehicleTypeRepository;
+import com.example.vehicleservice.security.UserContextHolder;
 import com.example.vehicleservice.service.VehicleService;
 import com.example.commondto.utils.CrudUtils;
+import com.example.vehicleservice.utils.ConvertHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @Service
@@ -33,12 +36,14 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
     private final UserValidationIntegration userValidationIntegration;
+    private final VerifyCreationIntegration verifyCreationIntegration;
     private final JourneyRepository journeyRepository;
+    private final ConvertHelper convertHelper;
 
     public VehicleResponse create(VehicleRequest vehicleRequest) {
         log.info("Creating vehicle with request: {}", vehicleRequest);
 
-        UserValidationResponse response = userValidationIntegration.validateUser(vehicleRequest.getOwnerId(), null).join();
+        UserValidationResponse response = userValidationIntegration.validateUser(vehicleRequest.getOwnerId(), UserContextHolder.get().getUsername()).join();
 
         if (response == null || !response.isValid()) {
             throw new NotFoundException("User validation failed: " +
@@ -75,7 +80,7 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         journeyRepository.save(journey);
         log.info("Vehicle saved successfully with id: {}", savedVehicle.getId());
-
+        verifyCreationIntegration.createVerify(convertHelper.convertToVerifyCreationRequest(savedVehicle));
         return VehicleResponse.from(savedVehicle);
     }
 
@@ -124,15 +129,15 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public VehicleResponse update(String id, VehicleRequest vehicleRequest) {
+    public VehicleResponse update(String id, UpdateStatusRequest updateRequest) {
         Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Vehicle not found with id " + id)
         );
-        try {
-            BeanCopyUtils.copyNonNullProperties(vehicleRequest, vehicle);
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException("Failed to update vehicle", e);
+        if (updateRequest.getStatus() == Status.APPROVED) {
+            vehicle.setVerified(true);
         }
+        vehicle.setNote(updateRequest.getNote());
+
         return VehicleResponse.from(vehicleRepository.save(vehicle));
     }
 

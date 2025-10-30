@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -29,7 +30,7 @@ public class VehicleResponse {
 
     private boolean verified;
 
-    private String registrationImageUrl;
+    private List<String> registrationImageUrl;
 
     private String note;
     private JourneyResponse journey;

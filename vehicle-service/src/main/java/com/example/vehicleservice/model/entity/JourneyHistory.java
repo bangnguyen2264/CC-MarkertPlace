@@ -1,11 +1,13 @@
 package com.example.vehicleservice.model.entity;
 
+import com.example.commondto.constant.Status;
 import com.example.commondto.entity.BaseEntity;
-import com.example.vehicleservice.model.constants.JourneyStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
+import java.util.List;
+
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,10 +22,10 @@ public class JourneyHistory extends BaseEntity {
     private Double newDistance;
     private Double averageSpeed;
     private Double energyUsed;
-    private String certificateImageUrl;
+    private List<String> certificateImageUrl;
     private String note;
     private String updatedBy; // CVA hoặc Admin
-    private JourneyStatus status;
+    private Status status;
     @ManyToOne
     @JoinColumn(name = "journey_id")
     private Journey journey;
