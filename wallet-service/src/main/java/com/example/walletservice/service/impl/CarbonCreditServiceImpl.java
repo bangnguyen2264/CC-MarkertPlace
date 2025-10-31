@@ -81,8 +81,14 @@ public class CarbonCreditServiceImpl implements CarbonCreditService {
             carbonCredit.setTradedCredit(carbonCredit.getTradedCredit() + absAmount);
             carbonCredit.setAvailableCredit(carbonCredit.getAvailableCredit() - absAmount);
         }
-
         carbonCreditRepository.save(carbonCredit);
+        return CarbonCreditResponse.from(carbonCredit);
+    }
+
+    @Override
+    public CarbonCreditResponse getByOwnerId(String ownerId) {
+        CarbonCredit carbonCredit = carbonCreditRepository.findByOwnerId(ownerId)
+                .orElseThrow(() -> new NotFoundException("CarbonCredit not found with user id: " + ownerId));
         return CarbonCreditResponse.from(carbonCredit);
     }
 

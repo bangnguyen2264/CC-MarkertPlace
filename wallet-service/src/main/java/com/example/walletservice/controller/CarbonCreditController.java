@@ -31,7 +31,10 @@ public class CarbonCreditController {
     public ResponseEntity<CarbonCreditResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(carbonCreditService.getById(id));
     }
-
+    @GetMapping("/user/{id}")
+    public ResponseEntity<CarbonCreditResponse> getByOwnerId(@PathVariable("id") String id) {
+        return ResponseEntity.ok(carbonCreditService.getByOwnerId(id));
+    }
     // 🟢 Tạo mới ví tín chỉ carbon cho người dùng
     @PostMapping
     public ResponseEntity<CarbonCreditResponse> create(@RequestParam String ownerId) {

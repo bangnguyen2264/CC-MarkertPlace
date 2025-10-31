@@ -1,6 +1,7 @@
 package com.example.walletservice.controller;
 
 import com.example.walletservice.model.dto.request.WalletUpdateRequest;
+import com.example.walletservice.model.dto.response.CarbonCreditResponse;
 import com.example.walletservice.model.dto.response.WalletResponse;
 import com.example.walletservice.model.filter.WalletFilter;
 import com.example.walletservice.service.WalletService;
@@ -30,6 +31,11 @@ public class WalletController {
     @GetMapping("/{id}")
     public ResponseEntity<WalletResponse> getById(@PathVariable("id") String id) {
         return ResponseEntity.ok(walletService.getById(id));
+    }
+    
+    @GetMapping("/user/{id}")
+    public ResponseEntity<WalletResponse> getByOwnerId(@PathVariable("id") String id) {
+        return ResponseEntity.ok(walletService.getByOwnerId(id));
     }
 
     // 🟢 Tạo ví mới cho user

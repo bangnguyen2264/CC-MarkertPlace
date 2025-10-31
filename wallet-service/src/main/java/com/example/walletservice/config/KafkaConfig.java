@@ -1,5 +1,6 @@
 package com.example.walletservice.config;
 
+import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
 import com.example.commondto.dto.request.UserValidationRequest;
 import com.example.commondto.dto.request.WalletCreationRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -75,4 +76,16 @@ public class KafkaConfig {
         return factory;
     }
 
+    @Bean
+    public ConsumerFactory<String, UpdateCarbonCreditMessage> ccUpdateConsumerFactory() {
+        return createConsumerFactory(UpdateCarbonCreditMessage.class);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, UpdateCarbonCreditMessage> ccUpdateKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, UpdateCarbonCreditMessage> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(ccUpdateConsumerFactory());
+        return factory;
+    }
 }

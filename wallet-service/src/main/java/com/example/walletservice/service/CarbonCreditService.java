@@ -11,4 +11,6 @@ public interface CarbonCreditService {
     CarbonCreditResponse getById(String id);
     CarbonCreditResponse create(String ownerId);
     CarbonCreditResponse update(String id, CarbonCreditUpdateRequest carbonCreditUpdateRequest);
+    CarbonCreditResponse getByOwnerId(String ownerId);
+
 }
