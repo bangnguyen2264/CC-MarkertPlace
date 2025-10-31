@@ -1,12 +1,14 @@
 package com.example.vehicleservice.service.impl;
 
 import com.example.commondto.constant.Status;
+import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
 import com.example.commondto.dto.request.UpdateStatusRequest;
 import com.example.commondto.exception.ConflictException;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.BeanCopyUtils;
 import com.example.commondto.utils.CrudUtils;
 import com.example.vehicleservice.integration.VerifyCreationIntegration;
+import com.example.vehicleservice.kafka.producer.CarbonCreditProducer;
 import com.example.vehicleservice.model.dto.request.JourneyHistoryRequest;
 import com.example.vehicleservice.model.dto.response.JourneyHistoryResponse;
 import com.example.vehicleservice.model.dto.response.JourneyResponse;
@@ -35,6 +37,7 @@ public class JourneyServiceImpl implements JourneyService {
     private final JourneyHistoryRepository journeyHistoryRepository;
     private final VerifyCreationIntegration verifyCreationIntegration;
     private final ConvertHelper convertHelper;
+    private final CarbonCreditProducer carbonCreditProducer;
 
     @Override
     public List<JourneyHistoryResponse> getAllJourneyHistory(JourneyFilter journeyFilter) {
@@ -98,6 +101,7 @@ public class JourneyServiceImpl implements JourneyService {
         );
         if (request.getStatus() == Status.APPROVED) {
             _asyncJourney(journeyHistory);
+
         } else if (request.getStatus() == journeyHistory.getStatus()) {
             throw new ConflictException("This journey history status is not changed");
         }
@@ -121,37 +125,13 @@ public class JourneyServiceImpl implements JourneyService {
         double co2Reduced = JourneyUtils.calculateCo2Reduced(journey, journey.getVehicle().getVehicleType());
         journey.setCo2Reduced(co2Reduced);
 
-//        // 🔹 3. Cập nhật tín chỉ carbon tương ứng
-//        CarbonCredit existingCredit = carbonCreditRepository.findByJourneyId(journey.getId());
-//
-//        if (existingCredit == null) {
-//            // ➕ Nếu chưa có → tạo mới tín chỉ carbon
-//            CarbonCredit credit = CarbonCredit.builder()
-//                    .journey(journey)
-//                    .ownerId(journey.getVehicle().getOwnerId())
-//                    .amount(co2Reduced)
-//                    .status(CreditStatus.AVAILABLE)
-//                    .build();
-//            carbonCreditRepository.save(credit);
-//
-//        } else {
-//            // ⚠️ Nếu đã có tín chỉ carbon
-//            if (existingCredit.getStatus() == CreditStatus.AVAILABLE) {
-//                // Có thể cập nhật nếu chưa giao dịch
-//                existingCredit.setAmount(co2Reduced);
-//                carbonCreditRepository.save(existingCredit);
-//            } else {
-//                // Đã giao dịch / rút — tạo adjustment để đảm bảo toàn vẹn
-//                CarbonCredit adjustment = CarbonCredit.builder()
-//                        .journey(journey)
-//                        .ownerId(existingCredit.getOwnerId())
-//                        .amount(co2Reduced - existingCredit.getAmount()) // phần chênh lệch
-//                        .status(CreditStatus.ADJUSTMENT)
-//                        .build();
-//                carbonCreditRepository.save(adjustment);
-//            }
-//        }
-
+          // 🔹 3. Cập nhật tín chỉ carbon tương ứng
+        carbonCreditProducer.sendUpdateCarbonCredit(
+                UpdateCarbonCreditMessage.builder()
+                        .ownerId(journey.getVehicle().getOwnerId())
+                        .newTotalCredit(co2Reduced)
+                        .build()
+        );
         // 🔹 4. Lưu lại lịch sử hành trình
         journeyRepository.save(journey);
     }

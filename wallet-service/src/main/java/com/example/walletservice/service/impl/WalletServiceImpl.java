@@ -2,6 +2,7 @@ package com.example.walletservice.service.impl;
 
 import com.example.commondto.constant.TransactionAction;
 import com.example.commondto.constant.TransactionType;
+import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.CrudUtils;
 import com.example.walletservice.model.dto.request.WalletUpdateRequest;
 import com.example.walletservice.model.dto.response.WalletResponse;
@@ -40,6 +41,13 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = walletRepository.findById(id).orElseThrow(
                 () -> new NoSuchElementException("Wallet not found with id: " + id)
         );
+        return WalletResponse.from(wallet);
+    }
+
+    @Override
+    public WalletResponse getByOwnerId(String ownerId) {
+        Wallet wallet = walletRepository.findByOwnerId(ownerId)
+                .orElseThrow(()-> new NotFoundException("Wallet not found with userId: " + ownerId));
         return WalletResponse.from(wallet);
     }
 

@@ -7,6 +7,8 @@ public class KafkaTopics {
     public static final String WALLET_CREATION_RESPONSE = "wallet-creation-response";
     public static final String VERIFY_CREATION_REQUEST = "verify-creation-request";
     public static final String VERIFY_CREATION_RESPONSE = "verify-creation-response";
-    public static final String VERIFY_UPDATE_MESSAGE = "verify-update-request";
-    public static final String VERIFY_UPDATE_RESPONSE = "verify-update-response";
+    public static final String VERIFY_UPDATE_MESSAGE = "verify-update-message";
+    public static final String CC_UPDATE_MESSAGE = "cc-update-message";
+            ;
+
 }

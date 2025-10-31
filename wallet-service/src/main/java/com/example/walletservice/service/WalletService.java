@@ -10,6 +10,7 @@ import java.util.List;
 public interface WalletService {
     List<WalletResponse> getAll(WalletFilter walletFilter);
     WalletResponse getById(String id);
+    WalletResponse getByOwnerId(String ownerId);
     WalletResponse create(String ownerId);
     WalletResponse update(String id, WalletUpdateRequest walletUpdateRequest);
 
