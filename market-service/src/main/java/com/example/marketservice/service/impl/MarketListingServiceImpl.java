@@ -21,6 +21,7 @@ import com.example.marketservice.model.filter.MarketListingFilter;
 import com.example.marketservice.repository.BidRepository;
 import com.example.marketservice.repository.MarketListingRepository;
 import com.example.marketservice.service.MarketListingService;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -126,45 +128,58 @@ public class MarketListingServiceImpl implements MarketListingService {
 
     private Specification<MarketListing> _buildFilter(MarketListingFilter filter) {
         return (root, query, cb) -> {
-            var predicates = cb.conjunction();
+            List<Predicate> predicates = new ArrayList<>();
 
-            if (filter.getSellerId() != null) {
-                predicates.getExpressions().add(cb.equal(root.get("sellerId"), filter.getSellerId()));
+            // --- ID filter ---
+            if (filter.getSellerId() != null && !filter.getSellerId().isEmpty()) {
+                predicates.add(cb.equal(root.get("sellerId"), filter.getSellerId()));
             }
-            if (filter.getCreditId() != null) {
-                predicates.getExpressions().add(cb.equal(root.get("creditId"), filter.getCreditId()));
+            if (filter.getCreditId() != null && !filter.getCreditId().isEmpty()) {
+                predicates.add(cb.equal(root.get("creditId"), filter.getCreditId()));
             }
+
+            // --- Enum filter ---
             if (filter.getType() != null) {
-                predicates.getExpressions().add(cb.equal(root.get("type"), filter.getType()));
+                predicates.add(cb.equal(root.get("type"), filter.getType()));
             }
             if (filter.getStatus() != null) {
-                predicates.getExpressions().add(cb.equal(root.get("status"), filter.getStatus()));
+                predicates.add(cb.equal(root.get("status"), filter.getStatus()));
             }
 
+            // --- Price range ---
             if (filter.getMinPrice() != null) {
-                predicates.getExpressions().add(cb.greaterThanOrEqualTo(root.get("pricePerCredit"), filter.getMinPrice()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("pricePerCredit"), filter.getMinPrice()));
             }
             if (filter.getMaxPrice() != null) {
-                predicates.getExpressions().add(cb.lessThanOrEqualTo(root.get("pricePerCredit"), filter.getMaxPrice()));
+                predicates.add(cb.lessThanOrEqualTo(root.get("pricePerCredit"), filter.getMaxPrice()));
             }
 
+            // --- Quantity range ---
             if (filter.getMinQuantity() != null) {
-                predicates.getExpressions().add(cb.greaterThanOrEqualTo(root.get("quantity"), filter.getMinQuantity()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("quantity"), filter.getMinQuantity()));
             }
             if (filter.getMaxQuantity() != null) {
-                predicates.getExpressions().add(cb.lessThanOrEqualTo(root.get("quantity"), filter.getMaxQuantity()));
+                predicates.add(cb.lessThanOrEqualTo(root.get("quantity"), filter.getMaxQuantity()));
             }
 
+            // --- Date range ---
             if (filter.getStartFrom() != null) {
-                predicates.getExpressions().add(cb.greaterThanOrEqualTo(root.get("startTime"), filter.getStartFrom()));
+                predicates.add(cb.greaterThanOrEqualTo(
+                        root.get("startTime"),
+                        filter.getStartFrom().toLocalDateTime()
+                ));
             }
             if (filter.getEndBefore() != null) {
-                predicates.getExpressions().add(cb.lessThanOrEqualTo(root.get("endTime"), filter.getEndBefore()));
+                predicates.add(cb.lessThanOrEqualTo(
+                        root.get("endTime"),
+                        filter.getEndBefore().toLocalDateTime()
+                ));
             }
 
-            return predicates;
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 
 
     @Override

@@ -38,7 +38,7 @@ public class MarketListingController {
     // ✅ Lấy danh sách niêm yết (có filter & paging)
     @Operation(summary = "Lấy danh sách niêm yết (có filter)")
     @GetMapping
-    public ResponseEntity<List<MarketListingResponse>> getAllListings(@Valid @ParameterObject MarketListingFilter filter) {
+    public ResponseEntity<List<MarketListingResponse>> getAllListings(@Valid @ModelAttribute @ParameterObject MarketListingFilter filter) {
         return ResponseEntity.ok(marketListingService.getAll(filter));
     }
 
