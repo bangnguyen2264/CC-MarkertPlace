@@ -157,7 +157,40 @@ spring:
             - Path=/api/verify-requests/**
           filters:
             - JwtAuthenticationFilter
+        # ================= MARKET SERVICE =================
+        - id: market-service-docs
+          uri: lb://market-service
+          predicates:
+            - Path=/api/market/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
 
+        - id: market-service-list
+          uri: lb://market-service
+          predicates:
+            - Path=/api/listing/**
+          filters:
+            - JwtAuthenticationFilter
+        - id: market-service-bid
+          uri: lb://market-service
+          predicates:
+            - Path=/api/bid/**
+          filters:
+            - JwtAuthenticationFilter
+        # ================= TRANSACTION SERVICE =================
+        - id: transaction-service-docs
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/transaction/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/transaction/**
+          filters:
+            - JwtAuthenticationFilter
 
       globalcors:
         cors-configurations:
@@ -205,6 +238,10 @@ springdoc:
         url: /api/wallet/v3/api-docs
       - name: Verification Service
         url: /api/verify-requests/v3/api-docs
+      - name: Market Service
+        url: /api/market/v3/api-docs
+      - name: Transaction Service
+        url: /api/transaction/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha

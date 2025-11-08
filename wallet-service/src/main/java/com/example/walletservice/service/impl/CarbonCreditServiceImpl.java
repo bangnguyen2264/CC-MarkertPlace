@@ -65,25 +65,28 @@ public class CarbonCreditServiceImpl implements CarbonCreditService {
         CarbonCredit carbonCredit = carbonCreditRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("CarbonCredit not found with id: " + id));
 
-        double amount = request.getAmount();
+        Double newTotal = request.getTotalCredit();
+        Double newTraded = request.getTradedCredit();
 
-        // ✅ Nếu amount > 0 → cộng vào totalCredit và availableCredit
-        if (amount > 0) {
-            carbonCredit.setTotalCredit(carbonCredit.getTotalCredit() + amount);
-            carbonCredit.setAvailableCredit(carbonCredit.getAvailableCredit() + amount);
+        // Cập nhật totalCredit nếu có và lớn hơn giá trị hiện tại
+        if (newTotal != null && (carbonCredit.getTotalCredit() == null || newTotal > carbonCredit.getTotalCredit())) {
+            carbonCredit.setTotalCredit(newTotal);
         }
-        // ✅ Nếu amount < 0 → cập nhật tradedCredit và giảm availableCredit
-        else if (amount < 0) {
-            double absAmount = Math.abs(amount);
-            if (carbonCredit.getAvailableCredit() < absAmount) {
-                throw new BadRequestException("Not enough available credit to trade");
-            }
-            carbonCredit.setTradedCredit(carbonCredit.getTradedCredit() + absAmount);
-            carbonCredit.setAvailableCredit(carbonCredit.getAvailableCredit() - absAmount);
+
+        // Cập nhật tradedCredit
+        if (newTraded != null) {
+            Double currentTraded = carbonCredit.getTradedCredit() == null ? 0.0 : carbonCredit.getTradedCredit();
+            carbonCredit.setTradedCredit(currentTraded + newTraded);
         }
+
+        // Cập nhật availableCredit an toàn (không NullPointer)
+        Double currentTotal = carbonCredit.getTotalCredit() != null ? carbonCredit.getTotalCredit() : 0.0;
+        Double tradedIncrement = (newTraded != null ? newTraded : 0.0);
+        carbonCredit.setAvailableCredit(currentTotal - tradedIncrement);
         carbonCreditRepository.save(carbonCredit);
         return CarbonCreditResponse.from(carbonCredit);
     }
+
 
     @Override
     public CarbonCreditResponse getByOwnerId(String ownerId) {

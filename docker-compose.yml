@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  # ------------------------------------------------------------------
+  # 1. Ngrok – tunnel từ host:8087 (Spring Boot ngoài Docker)
+  # ------------------------------------------------------------------
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    restart: unless-stopped
+    command: >
+      http host.docker.internal:8222
+      --authtoken=350FGvfDE0KqJXklWdjB1fSAVVw_3sJLnpD2SxvZHtxAgxZXT
+      --log=stdout
+    ports:
+      - "4040:4040"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux only
+    networks:
+      - microservices-network
+
+  # ------------------------------------------------------------------
+  # 2. Các service phụ trợ (giữ nguyên)
+  # ------------------------------------------------------------------
   postgres:
     image: postgres:13-alpine
     container_name: postgres
@@ -71,6 +92,7 @@ services:
       - "9495:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
       - prometheus-data:/prometheus
     networks:
       - microservices-network
@@ -91,6 +113,7 @@ services:
     networks:
       - microservices-network
 
+# ------------------------------------------------------------------
 networks:
   microservices-network:
     driver: bridge

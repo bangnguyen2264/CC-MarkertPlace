@@ -1,0 +1,73 @@
+server:
+  port: 8087
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  main:
+    web-application-type: servlet
+  application:
+    name: transaction-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oose_db?timezone=Asia/Ho_Chi_Minh
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ${spring.application.name}-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.json.trusted.packages: com.example.commondto.dto.request,com.example.commondto.dto.response
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  server:
+    url: http://localhost:8222
+    description: API Gateway (Development)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus  # Expose prometheus endpoint
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+vnpay:
+  tmn_code: ${VNP_TMN_CODE}
+  secret_key: ${VNP_HASH_SECRET}
+  api_url: ${VNP_PAY_URL}
+  return_url: ${VNP_RETURN_URL}
+  version: 2.1.0
+  curr_code: VND

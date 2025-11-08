@@ -1,5 +1,6 @@
 package com.example.walletservice.config;
 
+import com.example.commondto.dto.request.CarbonCreditValidationRequest;
 import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
 import com.example.commondto.dto.request.UserValidationRequest;
 import com.example.commondto.dto.request.WalletCreationRequest;
@@ -58,6 +59,19 @@ public class KafkaConfig {
     @Bean
     public ConsumerFactory<String, UserValidationRequest> userValidationConsumerFactory() {
         return createConsumerFactory(UserValidationRequest.class);
+    }
+
+    @Bean
+    public ConsumerFactory<String, CarbonCreditValidationRequest> carbonCreditValidateConsumerFactory() {
+        return createConsumerFactory(CarbonCreditValidationRequest.class);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, CarbonCreditValidationRequest> carbonCreditValidationKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, CarbonCreditValidationRequest> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(carbonCreditValidateConsumerFactory());
+        return factory;
     }
 
     @Bean

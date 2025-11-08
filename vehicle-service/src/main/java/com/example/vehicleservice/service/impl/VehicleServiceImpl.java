@@ -46,7 +46,7 @@ public class VehicleServiceImpl implements VehicleService {
         UserValidationResponse response = userValidationIntegration.validateUser(vehicleRequest.getOwnerId(), UserContextHolder.get().getUsername()).join();
 
         if (response == null || !response.isValid()) {
-            throw new NotFoundException("User validation failed: " +
+            throw new NotFoundException(
                     (response != null ? response.getMessage() : "No response from user-service"));
         }
 

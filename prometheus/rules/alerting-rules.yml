@@ -1,0 +1,30 @@
+groups:
+  - name: microservice-alerts
+    rules:
+      - alert: HighCpuUsage
+        expr: system_cpu_usage > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.application }}"
+          description: "CPU usage has been above 80% for more than 2 minutes on {{ $labels.application }}"
+
+      - alert: HighRequestErrorRate
+        expr: rate(http_server_requests_seconds_count{status!~"2.."}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.application }}"
+          description: "Error rate > 10% for {{ $labels.application }}"
+
+#alert: tên cảnh báo
+#
+#expr: điều kiện PromQL
+#
+#for: điều kiện này phải đúng liên tục trong 2 phút mới kích hoạt
+#
+#labels: có thể gắn mức độ (severity)
+#
+#annotations: nội dung mô tả cảnh báo

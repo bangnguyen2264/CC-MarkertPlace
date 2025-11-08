@@ -1,0 +1,8 @@
+groups:
+  - name: microservice-recording-rules
+    interval: 30s # tần suất thực hiện (mặc định theo scrape_interval)
+    rules:
+      - record: job:http_requests_per_second # tên mới của metric mà Prometheus sẽ lưu sẵn
+        expr: rate(http_server_requests_seconds_count[1m]) # biểu thức PromQL để tính toán
+      - record: job:cpu_usage_percent
+        expr: system_cpu_usage * 100

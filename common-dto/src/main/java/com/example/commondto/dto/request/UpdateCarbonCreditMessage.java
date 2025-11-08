@@ -9,5 +9,6 @@ import lombok.*;
 public class UpdateCarbonCreditMessage {
     private String ownerId;
     private Double newTotalCredit;
+    private Double newTradedCredit;
 
 }

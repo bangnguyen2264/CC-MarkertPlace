@@ -18,12 +18,14 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
         </processorPath>
-        <module name="user-service" />
         <module name="verification-service" />
         <module name="vehicle-service" />
         <module name="common-dto" />
-        <module name="wallet-service" />
         <module name="media-service" />
+        <module name="transaction-service" />
+        <module name="user-service" />
+        <module name="wallet-service" />
+        <module name="market-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -39,6 +41,7 @@
       <module name="config-server" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="media-service" options="" />
+      <module name="transaction-service" options="" />
       <module name="user-service" options="" />
       <module name="vehicle-service" options="" />
       <module name="verification-service" options="" />

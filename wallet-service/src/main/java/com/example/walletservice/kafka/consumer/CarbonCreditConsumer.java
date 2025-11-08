@@ -39,7 +39,8 @@ public class CarbonCreditConsumer {
         carbonCreditService.update(
                 carbonCredit.getId(),
                 CarbonCreditUpdateRequest.builder()
-                        .amount(message.getNewTotalCredit())
+                        .totalCredit(message.getNewTotalCredit())
+                        .tradedCredit(message.getNewTradedCredit())
                         .build()
         );
     }

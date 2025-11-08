@@ -15,6 +15,8 @@
         <option value="$PROJECT_DIR$/verification-service/pom.xml" />
         <option value="$PROJECT_DIR$/media-service/pom.xml" />
         <option value="$PROJECT_DIR$/wallet-service/pom.xml" />
+        <option value="$PROJECT_DIR$/market-service/pom.xml" />
+        <option value="$PROJECT_DIR$/transaction-service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

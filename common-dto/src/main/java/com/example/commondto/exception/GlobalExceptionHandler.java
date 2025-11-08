@@ -25,19 +25,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errors);
     }
 
     // 🔹 Custom domain exceptions
-    @ExceptionHandler({
-            NotFoundException.class,
-            BadRequestException.class,
-            UnauthorizedException.class,
-            AccessDeniedException.class,
-            ConflictException.class
-    })
+    @ExceptionHandler({NotFoundException.class, BadRequestException.class, UnauthorizedException.class, AccessDeniedException.class, ConflictException.class})
     public ResponseEntity<ErrorResponse> handleCustomExceptions(RuntimeException ex, WebRequest webRequest) {
         HttpStatus status;
 
@@ -48,93 +41,50 @@ public class GlobalExceptionHandler {
         else if (ex instanceof ConflictException) status = HttpStatus.CONFLICT;
         else status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                status.value(),
-                status.getReasonPhrase(),
-                ex.getMessage(),
-                webRequest.getDescription(false)
-        );
+        ErrorResponse error = new ErrorResponse(new Date(), status.value(), status.getReasonPhrase(), ex.getMessage(), webRequest.getDescription(false));
 
         return ResponseEntity.status(status).body(error);
     }
 
     // 🔹 Hibernate / SQL specific exceptions
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
-            DataIntegrityViolationException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
 
         String message = "Database constraint violation";
         if (ex.getCause() instanceof ConstraintViolationException constraintEx) {
-            String constraintName = constraintEx.getConstraintName();
-                message = "duplicate key value violates unique constraint";
-
+            message = constraintEx.getConstraintName();
         }
 
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                message,
-                request.getRequestURI()
-        );
+        ErrorResponse error = new ErrorResponse(new Date(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), message, request.getRequestURI());
 
         return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(SQLGrammarException.class)
-    public ResponseEntity<ErrorResponse> handleSQLGrammarException(
-            SQLGrammarException ex, HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "Invalid SQL syntax.",
-                request.getRequestURI()
-        );
+    public ResponseEntity<ErrorResponse> handleSQLGrammarException(SQLGrammarException ex, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(new Date(), HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "Invalid SQL syntax.", request.getRequestURI());
         return ResponseEntity.internalServerError().body(error);
     }
 
     @ExceptionHandler(JDBCConnectionException.class)
-    public ResponseEntity<ErrorResponse> handleDatabaseConnection(
-            JDBCConnectionException ex, HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(),
-                "Unable to connect to the database.",
-                request.getRequestURI()
-        );
+    public ResponseEntity<ErrorResponse> handleDatabaseConnection(JDBCConnectionException ex, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(new Date(), HttpStatus.SERVICE_UNAVAILABLE.value(), HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(), "Unable to connect to the database.", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
 
     @ExceptionHandler(SQLException.class)
-    public ResponseEntity<ErrorResponse> handleSQLException(
-            SQLException ex, HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "A database error occurred: " + ex.getMessage(),
-                request.getRequestURI()
-        );
+    public ResponseEntity<ErrorResponse> handleSQLException(SQLException ex, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(new Date(), HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "A database error occurred: " + ex.getMessage(), request.getRequestURI());
         return ResponseEntity.internalServerError().body(error);
     }
 
     // 🔹 Fallback handler
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
 
         ex.printStackTrace(); // for debugging
 
-        ErrorResponse error = new ErrorResponse(
-                new Date(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "An unexpected error occurred.",
-                request.getRequestURI()
-        );
+        ErrorResponse error = new ErrorResponse(new Date(), HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "An unexpected error occurred.", request.getRequestURI());
 
         return ResponseEntity.internalServerError().body(error);
     }
