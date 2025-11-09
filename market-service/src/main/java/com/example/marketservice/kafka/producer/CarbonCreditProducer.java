@@ -1,12 +1,10 @@
 package com.example.marketservice.kafka.producer;
 
 import com.example.commondto.dto.request.CarbonCreditValidationRequest;
+import com.example.commondto.dto.request.MarketPurchaseMessage;
 import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
-import com.example.commondto.dto.response.CarbonCreditValidationResponse;
 import com.example.commondto.kafka.KafkaTopics;
-import com.example.marketservice.model.entity.MarketListing;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -26,8 +24,11 @@ public class CarbonCreditProducer {
     public void sendUpdateCarbonCreditRequest(UpdateCarbonCreditMessage message) {
         log.info("Sending carbon credit validate response for ownerId={} -> newTotalCredit={}, newTraderCredit={}",
                 message.getOwnerId(), message.getNewTotalCredit(), message.getNewTradedCredit());
-        kafkaTemplate.send(KafkaTopics.CC_UPDATE_MESSAGE, message);    }
+        kafkaTemplate.send(KafkaTopics.CC_UPDATE_MESSAGE, message);
+    }
 
-    public void sendPurchaseEvent(MarketListing listing, String buyerId) {
+    public void sendPurchaseEvent(MarketPurchaseMessage message) {
+        log.info("Sending purchase event to transaction service for listingId={}, buyerId={}, sellerId={} ", message.getListingId(), message.getBuyerId(), message.getSellerId());
+        kafkaTemplate.send(KafkaTopics.MARKET_PURCHASE_EVENT, message);
     }
 }

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class MarketPurchaseMessage {
 
     @Schema(description = "ID listing liên quan đến giao dịch")
-    private String referenceId;
+    private String listingId;
 
     @Schema(description = "Người mua")
     private String buyerId;

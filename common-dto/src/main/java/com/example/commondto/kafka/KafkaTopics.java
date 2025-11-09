@@ -1,5 +1,7 @@
 package com.example.commondto.kafka;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
+
 public abstract class KafkaTopics {
     public static final String USER_VALIDATION_REQUEST = "user-validation-request";
     public static final String USER_VALIDATION_RESPONSE = "user-validation-response";
@@ -13,4 +15,5 @@ public abstract class KafkaTopics {
     public static final String CC_VALIDATE_RESPONSE = "cc-validate-response";
 
 
+    public static final String MARKET_PURCHASE_EVENT = "market-purchase-event";
 }

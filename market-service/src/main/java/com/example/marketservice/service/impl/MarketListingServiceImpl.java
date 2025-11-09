@@ -4,6 +4,7 @@ package com.example.marketservice.service.impl;
 import com.example.commondto.constant.ListingStatus;
 import com.example.commondto.constant.ListingType;
 import com.example.commondto.dto.request.CarbonCreditValidationRequest;
+import com.example.commondto.dto.request.MarketPurchaseMessage;
 import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
 import com.example.commondto.dto.response.CarbonCreditValidationResponse;
 import com.example.commondto.exception.BadRequestException;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -181,7 +183,6 @@ public class MarketListingServiceImpl implements MarketListingService {
     }
 
 
-
     @Override
     @Transactional
     public MarketListingResponse update(String id, ListingStatus newStatus) {
@@ -260,11 +261,15 @@ public class MarketListingServiceImpl implements MarketListingService {
         if (listing.getType() != ListingType.FIXED_PRICE) {
             throw new BadRequestException("Buy now is only available for fixed-price listings");
         }
-        if (listing.getStatus() != ListingStatus.ACTIVE) {
-            throw new BadRequestException("Listing is not active");
+
+        if (request.getBuyerId().equals(listing.getSellerId())) {
+            throw new BadRequestException("Cannot purchase listing with different sellers");
+        }
+        if (isFinalStatus(listing.getStatus())) {
+            throw new BadRequestException("Cannot modify listing already " + listing.getStatus());
         }
 
-        if (listing.getEndTime() != null && listing.getEndTime().isBefore(java.time.LocalDateTime.now())) {
+        if (listing.getEndTime() != null && listing.getEndTime().isBefore(LocalDateTime.now())) {
             listing.setStatus(ListingStatus.EXPIRED);
             repository.save(listing);
             throw new BadRequestException("Listing has expired");
@@ -273,7 +278,14 @@ public class MarketListingServiceImpl implements MarketListingService {
         listing.setStatus(ListingStatus.PENDING_PAYMENT);
         repository.save(listing);
 
-        producer.sendPurchaseEvent(listing, request.getBuyerId());
+        producer.sendPurchaseEvent(MarketPurchaseMessage.builder()
+                .listingId(listing.getId())
+                .listingType(listing.getType().name())
+                .amount(listing.getQuantity() * listing.getPricePerCredit())
+                .sellerId(listing.getSellerId())
+                .listingId(request.getListingId())
+                .buyerId(request.getBuyerId())
+                .build());
 
         log.info("💳 Buyer {} initiated buy-now for listing {}", request.getBuyerId(), request.getListingId());
         return toResponse(listing);

@@ -15,7 +15,6 @@ public class JourneyHistoryResponse {
     private Double averageSpeed;
     private Double energyUsed;
     private List<String> certificateImageUrl;
-    private String updatedBy; // CVA hoặc Admin
     private Status status;
 
     public static JourneyHistoryResponse from (JourneyHistory journeyHistory) {
@@ -25,7 +24,6 @@ public class JourneyHistoryResponse {
                 .averageSpeed(journeyHistory.getAverageSpeed())
                 .energyUsed(journeyHistory.getEnergyUsed())
                 .certificateImageUrl(journeyHistory.getCertificateImageUrl())
-                .updatedBy(journeyHistory.getUpdatedBy())
                 .status(journeyHistory.getStatus())
                 .build();
     }

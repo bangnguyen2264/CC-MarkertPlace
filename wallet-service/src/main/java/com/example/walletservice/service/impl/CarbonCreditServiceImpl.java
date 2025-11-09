@@ -1,16 +1,10 @@
 package com.example.walletservice.service.impl;
 
-import com.example.commondto.constant.TransactionAction;
-import com.example.commondto.constant.TransactionType;
-import com.example.commondto.exception.BadRequestException;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.CrudUtils;
 import com.example.walletservice.model.dto.request.CarbonCreditUpdateRequest;
 import com.example.walletservice.model.dto.response.CarbonCreditResponse;
-import com.example.walletservice.model.dto.response.WalletResponse;
-import com.example.walletservice.model.entity.Audit;
 import com.example.walletservice.model.entity.CarbonCredit;
-import com.example.walletservice.model.entity.Wallet;
 import com.example.walletservice.model.filter.CarbonCreditFilter;
 import com.example.walletservice.repository.AuditRepository;
 import com.example.walletservice.repository.CarbonCreditRepository;
@@ -22,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +59,6 @@ public class CarbonCreditServiceImpl implements CarbonCreditService {
                 .orElseThrow(() -> new NotFoundException("CarbonCredit not found with id: " + id));
 
         Double newTotal = request.getTotalCredit();
-        Double newTraded = request.getTradedCredit();
 
         // Cập nhật totalCredit nếu có và lớn hơn giá trị hiện tại
         if (newTotal != null && (carbonCredit.getTotalCredit() == null || newTotal > carbonCredit.getTotalCredit())) {
@@ -74,15 +66,15 @@ public class CarbonCreditServiceImpl implements CarbonCreditService {
         }
 
         // Cập nhật tradedCredit
-        if (newTraded != null) {
+        if (request.getTradedCredit() != null) {
             Double currentTraded = carbonCredit.getTradedCredit() == null ? 0.0 : carbonCredit.getTradedCredit();
-            carbonCredit.setTradedCredit(currentTraded + newTraded);
+            carbonCredit.setTradedCredit(currentTraded + request.getTradedCredit());
         }
 
         // Cập nhật availableCredit an toàn (không NullPointer)
         Double currentTotal = carbonCredit.getTotalCredit() != null ? carbonCredit.getTotalCredit() : 0.0;
-        Double tradedIncrement = (newTraded != null ? newTraded : 0.0);
-        carbonCredit.setAvailableCredit(currentTotal - tradedIncrement);
+        Double currentTraded = carbonCredit.getTradedCredit() != null ? carbonCredit.getTradedCredit() : 0.0 ;
+        carbonCredit.setAvailableCredit(currentTotal - currentTraded);
         carbonCreditRepository.save(carbonCredit);
         return CarbonCreditResponse.from(carbonCredit);
     }
