@@ -1,9 +1,6 @@
 package com.example.walletservice.config;
 
-import com.example.commondto.dto.request.CarbonCreditValidationRequest;
-import com.example.commondto.dto.request.UpdateCarbonCreditMessage;
-import com.example.commondto.dto.request.UserValidationRequest;
-import com.example.commondto.dto.request.WalletCreationRequest;
+import com.example.commondto.dto.request.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -100,6 +97,18 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, UpdateCarbonCreditMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(ccUpdateConsumerFactory());
+        return factory;
+    }
+    @Bean
+    public ConsumerFactory<String, PaymentRequest> paymentRequestConsumerFactory() {
+        return createConsumerFactory(PaymentRequest.class);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentRequest> marketPaymentRequestKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentRequest> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(paymentRequestConsumerFactory());
         return factory;
     }
 }

@@ -61,6 +61,10 @@ public class KafkaConfig {
     public ConsumerFactory<String, CarbonCreditValidationResponse> carbonCreditValidationConsumerFactory() {
         return createConsumerFactory(CarbonCreditValidationResponse.class);
     }
+    @Bean
+    public ConsumerFactory<String, String> marketPaymentConsumerFactory() {
+        return createConsumerFactory(String.class);
+    }
 
 
     @Bean
@@ -78,5 +82,13 @@ public class KafkaConfig {
         factory.setConsumerFactory(carbonCreditValidationConsumerFactory());
         return factory;
     }
-    
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> paymentEventKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(marketPaymentConsumerFactory());
+        return factory;
+    }
+
 }

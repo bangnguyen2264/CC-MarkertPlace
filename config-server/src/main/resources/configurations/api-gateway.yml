@@ -181,14 +181,14 @@ spring:
         - id: transaction-service-docs
           uri: lb://transaction-service
           predicates:
-            - Path=/api/transaction/v3/api-docs
+            - Path=/api/transactions/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
 
         - id: transaction-service
           uri: lb://transaction-service
           predicates:
-            - Path=/api/transaction/**
+            - Path=/api/transactions/**
           filters:
             - JwtAuthenticationFilter
 
@@ -241,7 +241,7 @@ springdoc:
       - name: Market Service
         url: /api/market/v3/api-docs
       - name: Transaction Service
-        url: /api/transaction/v3/api-docs
+        url: /api/transactions/v3/api-docs
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha

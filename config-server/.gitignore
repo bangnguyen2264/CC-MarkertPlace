@@ -32,4 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 ngrok_recovery_codes.txt
-.env
+../transaction-service/.env

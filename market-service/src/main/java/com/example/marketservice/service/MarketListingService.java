@@ -21,5 +21,4 @@ public interface MarketListingService {
 
     void delete(String id);
 
-    MarketListingResponse purchase(MarketPurchaseRequest request);
 }

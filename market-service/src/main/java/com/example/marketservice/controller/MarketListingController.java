@@ -67,13 +67,4 @@ public class MarketListingController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ Mua ngay (Buy Now)
-    @Operation(summary = "Mua ngay niêm yết giá cố định")
-    @PostMapping("/purchase")
-    public ResponseEntity<Void> purchase(
-            @ParameterObject MarketPurchaseRequest request
-    ) {
-        marketListingService.purchase(request);
-        return ResponseEntity.ok().build();
-    }
 }

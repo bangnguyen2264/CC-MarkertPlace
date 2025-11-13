@@ -1,6 +1,10 @@
 server:
   port: 8087
-
+  error:
+    include-stacktrace: never
+    include-message: always
+    include-binding-errors: never
+    include-exception: false
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -65,9 +69,9 @@ management:
       prometheus:
         enabled: true
 vnpay:
-  tmn_code: ${VNP_TMN_CODE}
-  secret_key: ${VNP_HASH_SECRET}
-  api_url: ${VNP_PAY_URL}
-  return_url: ${VNP_RETURN_URL}
+  tmn_code: 9G98XPFA
+  secret_key: WCX7S6F8LPB0JKMZWNU8U2MTCI1J9DK7
+  api_url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return_url: https://noncompliantly-pseudomodest-latonya.ngrok-free.dev/api/payments/vnpay-return
   version: 2.1.0
   curr_code: VND

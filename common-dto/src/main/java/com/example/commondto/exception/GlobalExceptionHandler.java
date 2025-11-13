@@ -2,6 +2,7 @@ package com.example.commondto.exception;
 
 import com.example.commondto.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.SQLGrammarException;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     // 🧩 Validation error (DTO @Valid)
@@ -44,6 +46,13 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(new Date(), status.value(), status.getReasonPhrase(), ex.getMessage(), webRequest.getDescription(false));
 
         return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomExceptions(CustomException ex, WebRequest webRequest) {
+        log.info("CustomExceptionHandler triggered: {}", ex.getMessage()); // ← XUẤT LOG NÀY?
+        ErrorResponse error = new ErrorResponse(new Date(), ex.getStatus().value(), ex.getStatus().getReasonPhrase(), ex.getMessage(), webRequest.getDescription(false));
+        return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
     // 🔹 Hibernate / SQL specific exceptions

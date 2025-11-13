@@ -16,4 +16,7 @@ public abstract class KafkaTopics {
 
 
     public static final String MARKET_PURCHASE_EVENT = "market-purchase-event";
+    public static final String MARKET_PAYMENT_EVENT = "market-payment-event";
+    public static final String MARKET_PAYMENT_REQUEST = "market-payment-request";
+    public static final String MARKET_PAYMENT_RESPONSE = "market-payment-response";
 }

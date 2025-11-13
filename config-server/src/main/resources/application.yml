@@ -10,4 +10,18 @@ spring:
     config:
       server:
         native:
-          search-locations: classpath:/configurations
+          search-locations: classpath:/configurations, file:./configurations
+        default-application-name: application
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true

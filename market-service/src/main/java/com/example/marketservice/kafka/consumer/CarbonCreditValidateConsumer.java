@@ -24,4 +24,6 @@ public class CarbonCreditValidateConsumer {
         log.info("📥 Received CarbonCredit validation response: {}", response);
         validationIntegration.completeResponse(response);
     }
+
+
 }

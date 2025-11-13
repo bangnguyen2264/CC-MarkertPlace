@@ -253,44 +253,6 @@ public class MarketListingServiceImpl implements MarketListingService {
         repository.delete(listing);
     }
 
-    @Override
-    public MarketListingResponse purchase(MarketPurchaseRequest request) {
-        MarketListing listing = repository.findById(request.getListingId())
-                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + request.getListingId()));
-
-        if (listing.getType() != ListingType.FIXED_PRICE) {
-            throw new BadRequestException("Buy now is only available for fixed-price listings");
-        }
-
-        if (request.getBuyerId().equals(listing.getSellerId())) {
-            throw new BadRequestException("Cannot purchase listing with different sellers");
-        }
-        if (isFinalStatus(listing.getStatus())) {
-            throw new BadRequestException("Cannot modify listing already " + listing.getStatus());
-        }
-
-        if (listing.getEndTime() != null && listing.getEndTime().isBefore(LocalDateTime.now())) {
-            listing.setStatus(ListingStatus.EXPIRED);
-            repository.save(listing);
-            throw new BadRequestException("Listing has expired");
-        }
-
-        listing.setStatus(ListingStatus.PENDING_PAYMENT);
-        repository.save(listing);
-
-        producer.sendPurchaseEvent(MarketPurchaseMessage.builder()
-                .listingId(listing.getId())
-                .listingType(listing.getType().name())
-                .amount(listing.getQuantity() * listing.getPricePerCredit())
-                .sellerId(listing.getSellerId())
-                .listingId(request.getListingId())
-                .buyerId(request.getBuyerId())
-                .build());
-
-        log.info("💳 Buyer {} initiated buy-now for listing {}", request.getBuyerId(), request.getListingId());
-        return toResponse(listing);
-
-    }
 
 
     private MarketListingResponse toResponse(MarketListing entity) {

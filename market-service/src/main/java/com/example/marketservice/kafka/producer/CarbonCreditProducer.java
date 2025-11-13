@@ -27,8 +27,4 @@ public class CarbonCreditProducer {
         kafkaTemplate.send(KafkaTopics.CC_UPDATE_MESSAGE, message);
     }
 
-    public void sendPurchaseEvent(MarketPurchaseMessage message) {
-        log.info("Sending purchase event to transaction service for listingId={}, buyerId={}, sellerId={} ", message.getListingId(), message.getBuyerId(), message.getSellerId());
-        kafkaTemplate.send(KafkaTopics.MARKET_PURCHASE_EVENT, message);
-    }
 }
