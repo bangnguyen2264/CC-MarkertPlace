@@ -7,27 +7,17 @@ spring:
 
   application:
     name: api-gateway
+
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-  # Redis Configuration
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ${REDIS_PASSWORD:}
-      timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
+
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
       security:
         rules:
           - path: /api/media/get/**
@@ -41,7 +31,6 @@ spring:
             access: [ADMIN, CVA]
 
       routes:
-
         # ================= USER SERVICE =================
         - id: user-service-docs
           uri: lb://user-service
@@ -69,7 +58,6 @@ spring:
           filters:
             - JwtAuthenticationFilter
 
-
         # ================= VEHICLE SERVICE =================
         - id: vehicle-service-docs
           uri: lb://vehicle-service
@@ -77,25 +65,27 @@ spring:
             - Path=/api/vehicles/v3/api-docs
           filters:
             - SetPath=/v3/api-docs
+
         - id: vehicle-service-vehicles
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicles/**
           filters:
             - JwtAuthenticationFilter
+
         - id: vehicle-service-vehicle-types
           uri: lb://vehicle-service
           predicates:
             - Path=/api/vehicle-types/**
           filters:
             - JwtAuthenticationFilter
+
         - id: journey-service
           uri: lb://vehicle-service
           predicates:
             - Path=/api/journeys/**
           filters:
             - JwtAuthenticationFilter
-
 
         # ================= MEDIA SERVICE =================
         - id: media-service-docs
@@ -111,7 +101,6 @@ spring:
             - Path=/api/media/**
           filters:
             - JwtAuthenticationFilter
-
 
         # ================= WALLET SERVICE =================
         - id: wallet-service-docs
@@ -142,7 +131,6 @@ spring:
           filters:
             - JwtAuthenticationFilter
 
-
         # ================= VERIFICATION SERVICE =================
         - id: verification-service-docs
           uri: lb://verification-service
@@ -157,6 +145,7 @@ spring:
             - Path=/api/verify-requests/**
           filters:
             - JwtAuthenticationFilter
+
         # ================= MARKET SERVICE =================
         - id: market-service-docs
           uri: lb://market-service
@@ -171,12 +160,14 @@ spring:
             - Path=/api/listing/**
           filters:
             - JwtAuthenticationFilter
+
         - id: market-service-bid
           uri: lb://market-service
           predicates:
             - Path=/api/bid/**
           filters:
             - JwtAuthenticationFilter
+
         # ================= TRANSACTION SERVICE =================
         - id: transaction-service-docs
           uri: lb://transaction-service
@@ -199,13 +190,14 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
+
       # Default Filters
       default-filters:
         - name: Retry
           args:
             retries: 3
             statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-            methods: GET,POST
+            methods: GET,POST,PATCH,DELETE
             backoff:
               firstBackoff: 50ms
               maxBackoff: 500ms
@@ -229,7 +221,7 @@ springdoc:
     path: /swagger-ui.html
     urls:
       - name: User Service
-        url: /api/users/v3/api-docs  # Đổi lại thành /api/users/v3/api-docs
+        url: /api/users/v3/api-docs
       - name: Vehicle Service
         url: /api/vehicles/v3/api-docs
       - name: Media Service
@@ -245,8 +237,8 @@ springdoc:
     urls-primary-name: User Service
     operationsSorter: method
     tagsSorter: alpha
-    api-docs:
-      enabled: true
+  api-docs:
+    enabled: true
 
 app:
   security:
@@ -257,6 +249,7 @@ app:
       auth-header: "Authorization"
       access-secret: mysupersecret
       refresh-secret: myrefreshsecret
+
 # Gateway Cache Configuration
 gateway:
   cache:
@@ -264,25 +257,21 @@ gateway:
     ttl: 300  # 5 minutes
     max-size: 1000
 
-# Service URLs (if not using service discovery)
-service:
-  user:
-    url: http://localhost:8081
-
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus  # Expose prometheus endpoint
+        include: health,info,prometheus,gateway
   metrics:
     export:
       prometheus:
@@ -291,5 +280,4 @@ management:
     health:
       show-details: always
     gateway:
-      access: unrestricted
-
+      enabled: true

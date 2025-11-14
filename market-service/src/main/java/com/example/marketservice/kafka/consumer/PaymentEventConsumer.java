@@ -1,7 +1,6 @@
 package com.example.marketservice.kafka.consumer;
 
 import com.example.commondto.constant.ListingStatus;
-import com.example.commondto.dto.request.MarketPaymentMessage;
 import com.example.commondto.dto.request.PaymentRequest;
 import com.example.commondto.kafka.KafkaTopics;
 import com.example.marketservice.repository.MarketListingRepository;

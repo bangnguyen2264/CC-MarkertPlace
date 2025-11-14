@@ -7,23 +7,15 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="api-gateway" />
-        <module name="eureka-server" />
         <module name="config-server" />
-      </profile>
-      <profile name="Annotation profile for microservices" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
-        </processorPath>
         <module name="verification-service" />
         <module name="vehicle-service" />
         <module name="common-dto" />
         <module name="media-service" />
+        <module name="api-gateway" />
         <module name="transaction-service" />
         <module name="user-service" />
+        <module name="eureka-server" />
         <module name="wallet-service" />
         <module name="market-service" />
       </profile>

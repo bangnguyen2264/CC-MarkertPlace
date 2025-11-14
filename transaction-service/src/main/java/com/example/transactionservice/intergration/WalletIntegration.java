@@ -35,6 +35,7 @@ public class WalletIntegration {
                 .buyerId(tx.getBuyerId())
                 .sellerId(tx.getSellerId())
                 .amount(tx.getAmount())
+                .method(tx.getPaymentMethod())
                 .credit(tx.getCredit())
                 .build();
 

@@ -1,5 +1,7 @@
 package com.example.walletservice.service.impl;
 
+import com.example.commondto.constant.TransactionAction;
+import com.example.commondto.constant.TransactionType;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.CrudUtils;
 import com.example.walletservice.model.dto.response.AuditResponse;
@@ -19,6 +21,28 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuditServiceImpl implements AuditService {
     private final AuditRepository auditRepository;
+
+    @Override
+    public void record(String ownerId,
+                       TransactionType type,
+                       TransactionAction action,
+                       Double amount,
+                       Double balanceAfter,
+                       String description,
+                       String referenceId) {
+
+        Audit audit = Audit.builder()
+                .ownerId(ownerId)
+                .type(type)
+                .action(action)
+                .amount(amount)
+                .balanceAfter(balanceAfter)
+                .description(description)
+                .referenceId(referenceId)
+                .build();
+
+        auditRepository.save(audit);
+    }
 
     @Override
     public List<AuditResponse> getAll(AuditFilter auditFilter) {

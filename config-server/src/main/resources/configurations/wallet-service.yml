@@ -8,7 +8,7 @@ spring:
     name: wallet-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/oose_db?timezone=Asia/Ho_Chi_Minh
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/oose_db?timezone=Asia/Ho_Chi_Minh
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -19,7 +19,7 @@ spring:
     show-sql: false
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost}:9092
     consumer:
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
@@ -39,7 +39,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
@@ -50,7 +50,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   server:
-    url: http://localhost:8222
+    url: http://${GATEWAY_URL:localhost}:8222Z
     description: API Gateway (Development)
 
 management:

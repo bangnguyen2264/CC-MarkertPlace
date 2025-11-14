@@ -8,7 +8,7 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/oose_db
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/oose_db?timezone=Asia/Ho_Chi_Minh
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -19,7 +19,7 @@ spring:
     show-sql: true
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost}:9092
     consumer:
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
@@ -29,7 +29,6 @@ spring:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
         spring.json.trusted.packages: com.example.commondto.dto.request,com.example.commondto.dto.response
-
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -39,11 +38,12 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
 app:
   security:
@@ -61,15 +61,18 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   server:
-    url: http://localhost:8222
-    description: API Gateway (Development)
+    url: http://${GATEWAY_URL:localhost}:8222Z
+    description: API Gateway
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus  # Expose prometheus endpoint
+        include: health,info,prometheus
   metrics:
     export:
       prometheus:
         enabled: true
+  endpoint:
+    health:
+      show-details: always

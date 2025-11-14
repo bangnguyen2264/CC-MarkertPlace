@@ -1,25 +1,17 @@
-server:
-  port: 8889
-
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
+name:
+  value: carbon_credit_marketplace
 spring:
-  application:
-    name: config-server
   cloud:
     config:
-      server:
-        native:
-          search-locations: classpath:/config
       override-system-properties: false
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  endpoint:
-    prometheus:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0

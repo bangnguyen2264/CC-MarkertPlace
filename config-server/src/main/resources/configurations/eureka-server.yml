@@ -1,22 +1,29 @@
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOSTNAME:eureka-server}
+    prefer-ip-address: false
   client:
-    registerWithEureka: false
-    fetchRegistry: false
-    serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
 
 server:
   port: 8761
 
+spring:
+  application:
+    name: eureka-server
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus  # Expose prometheus endpoint
+        include: health,info,prometheus
   metrics:
     export:
       prometheus:
         enabled: true
+  endpoint:
+    health:
+      show-details: always

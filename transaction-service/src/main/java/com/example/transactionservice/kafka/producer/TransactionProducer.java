@@ -1,5 +1,6 @@
 package com.example.transactionservice.kafka.producer;
 
+import com.example.commondto.dto.request.PaymentEvent;
 import com.example.commondto.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:configserver:http://localhost:8888
+    import:
+      - optional:configserver:http://${CONFIG_SERVER_URL:localhost}:8888
   application:
-    name: market-service
-
+    name: market-service   # ← thay bằng tên service

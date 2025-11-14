@@ -1,5 +1,8 @@
 package com.example.walletservice.kafka.consumer;
 
+import com.example.commondto.constant.PaymentMethod;
+import com.example.commondto.constant.TransactionAction;
+import com.example.commondto.constant.TransactionType;
 import com.example.commondto.dto.request.PaymentRequest;
 import com.example.commondto.dto.response.PaymentResponse;
 import com.example.commondto.kafka.KafkaTopics;
@@ -9,7 +12,9 @@ import com.example.walletservice.model.entity.CarbonCredit;
 import com.example.walletservice.model.entity.Wallet;
 import com.example.walletservice.repository.CarbonCreditRepository;
 import com.example.walletservice.repository.WalletRepository;
+import com.example.walletservice.service.AuditService;
 import com.example.walletservice.service.CarbonCreditService;
+import com.example.walletservice.utils.AuditDescriptionUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,56 +31,143 @@ public class MarketPaymentConsumer {
     private final CarbonCreditRepository carbonCreditRepository;
     private final CarbonCreditService carbonCreditService;
     private final WalletProducer walletProducer;
+    private final AuditService auditService;
+    private final AuditDescriptionUtil auditDescriptionUtil;
 
-    @KafkaListener(topics = KafkaTopics.MARKET_PAYMENT_REQUEST,
+    @KafkaListener(
+            topics = KafkaTopics.MARKET_PAYMENT_REQUEST,
             groupId = "${spring.application.name}-group",
             containerFactory = "marketPaymentRequestKafkaListenerFactory"
     )
     @Transactional
     public void consumeMarketPaymentRequest(PaymentRequest request) {
-        log.info("Received market payment request: buyer={}, seller={}, amount={}", request.getBuyerId(), request.getSellerId(), request.getAmount());
+        log.info("Received market payment request: buyer={}, seller={}, amount={}, method={}",
+                request.getBuyerId(), request.getSellerId(), request.getAmount(), request.getMethod());
 
         try {
-            Wallet buyerWallet = walletRepository.findByOwnerId(request.getBuyerId()).orElse(null);
-            if (buyerWallet == null) {
-                sendErrorResponse(request, "Buyer wallet not found for ownerId=" + request.getBuyerId(), HttpStatus.NOT_FOUND);
-                return;
-            }
-
             Wallet sellerWallet = walletRepository.findByOwnerId(request.getSellerId()).orElse(null);
             if (sellerWallet == null) {
-                sendErrorResponse(request, "Seller wallet not found for ownerId=" + request.getSellerId(), HttpStatus.NOT_FOUND);
+                sendErrorResponse(request, "Seller wallet not found", HttpStatus.NOT_FOUND);
                 return;
             }
 
-            // Kiểm tra số dư
-            if (buyerWallet.getBalance() < request.getAmount()) {
-                log.info("Buyer wallet balance {}  is lower than seller's balance {}",buyerWallet.getBalance(), request.getAmount());
-                sendErrorResponse(request , "Insufficient balance in buyer wallet", HttpStatus.BAD_REQUEST);
-                return;
+            // Nếu là thanh toán bằng ví, cần kiểm tra và cập nhật cả buyer
+            if (request.getMethod() == PaymentMethod.WALLET) {
+                Wallet buyerWallet = walletRepository.findByOwnerId(request.getBuyerId()).orElse(null);
+                if (buyerWallet == null) {
+                    sendErrorResponse(request, "Buyer wallet not found", HttpStatus.NOT_FOUND);
+                    return;
+                }
+
+                if (buyerWallet.getBalance() < request.getAmount()) {
+                    sendErrorResponse(request, "Insufficient balance in buyer wallet", HttpStatus.BAD_REQUEST);
+                    return;
+                }
+
+                // Trừ tiền buyer, cộng tiền seller
+                buyerWallet.setBalance(buyerWallet.getBalance() - request.getAmount());
+                sellerWallet.setBalance(sellerWallet.getBalance() + request.getAmount());
+                walletRepository.save(buyerWallet);
+                walletRepository.save(sellerWallet);
+
+                // Lưu audit cho buyer (wallet)
+                auditService.record(
+                        buyerWallet.getOwnerId(),
+                        TransactionType.WALLET,
+                        TransactionAction.WITHDRAW,
+                        request.getAmount(),
+                        buyerWallet.getBalance(),
+                        auditDescriptionUtil.buildWalletDescription(
+                                TransactionAction.WITHDRAW,
+                                request.getAmount(),
+                                buyerWallet.getOwnerId(),
+                                sellerWallet.getOwnerId(),
+                                request.getCorrelationId()
+                        ),
+                        request.getCorrelationId()
+                );
+
+                // Lưu audit cho seller (wallet)
+                auditService.record(
+                        sellerWallet.getOwnerId(),
+                        TransactionType.WALLET,
+                        TransactionAction.DEPOSIT,
+                        request.getAmount(),
+                        sellerWallet.getBalance(),
+                        auditDescriptionUtil.buildWalletDescription(
+                                TransactionAction.DEPOSIT,
+                                request.getAmount(),
+                                buyerWallet.getOwnerId(),
+                                sellerWallet.getOwnerId(),
+                                request.getCorrelationId()
+                        ),
+                        request.getCorrelationId()
+                );
             }
+
+            // Lưu audit tín chỉ carbon cho cả buyer và seller
             CarbonCredit buyerCredit = carbonCreditRepository.findByOwnerId(request.getBuyerId()).orElse(null);
-            if (buyerCredit == null) {
-                sendErrorResponse(request, "Buyer cc not found for ownerId=" + request.getSellerId(), HttpStatus.NOT_FOUND);
-                return;
-            }
-            // Thực hiện giao dịch
-            Double currentBuyerBalance = buyerWallet.getBalance() != null ? buyerWallet.getBalance() : 0.0;
-            buyerWallet.setBalance(currentBuyerBalance - request.getAmount());
-            Double currentSellerBalance = sellerWallet.getBalance() != null ? sellerWallet.getBalance() : 0.0;
-            sellerWallet.setBalance(currentSellerBalance + request.getAmount());
+            CarbonCredit sellerCredit = carbonCreditRepository.findByOwnerId(request.getSellerId()).orElse(null);
 
-            // Nạp tín chỉ
-            carbonCreditService.update(buyerCredit.getId(), CarbonCreditUpdateRequest.builder()
-                    .totalCredit(buyerCredit.getTotalCredit() + request.getCredit())
-                    .build());
-            walletRepository.save(buyerWallet);
-            walletRepository.save(sellerWallet);
+            if (buyerCredit != null && sellerCredit != null) {
+                // Buyer + tín chỉ
+                carbonCreditService.update(buyerCredit.getId(),
+                        CarbonCreditUpdateRequest.builder()
+                                .totalCredit(buyerCredit.getTotalCredit() + request.getCredit())
+                                .build());
+
+                // Seller - tín chỉ
+                carbonCreditService.update(sellerCredit.getId(),
+                        CarbonCreditUpdateRequest.builder()
+                                .totalCredit(sellerCredit.getTotalCredit() - request.getCredit())
+                                .build());
+
+                // Audit buyer carbon
+                auditService.record(
+                        buyerCredit.getOwnerId(),
+                        TransactionType.CARBON_CREDIT,
+                        TransactionAction.CREDIT_BUY,
+                        request.getCredit(),
+                        buyerCredit.getTotalCredit() + request.getCredit(),
+                        auditDescriptionUtil.buildCarbonDescription(
+                                TransactionAction.CREDIT_BUY,
+                                request.getCredit(),
+                                sellerCredit.getOwnerId(),
+                                buyerCredit.getOwnerId(),
+                                request.getCorrelationId()
+                        ),
+                        request.getCorrelationId()
+                );
+
+                // Audit seller carbon
+                auditService.record(
+                        sellerCredit.getOwnerId(),
+                        TransactionType.CARBON_CREDIT,
+                        TransactionAction.CREDIT_TRADE,
+                        request.getCredit(),
+                        sellerCredit.getTotalCredit() - request.getCredit(),
+                        auditDescriptionUtil.buildCarbonDescription(
+                                TransactionAction.CREDIT_TRADE,
+                                request.getCredit(),
+                                sellerCredit.getOwnerId(),
+                                buyerCredit.getOwnerId(),
+                                request.getCorrelationId()
+                        ),
+                        request.getCorrelationId()
+                );
+            }
 
             // Gửi phản hồi thành công
-            PaymentResponse response = PaymentResponse.builder().status(HttpStatus.OK).message("Payment successful").success(true).correlationId(request.getCorrelationId()).build();
+            PaymentResponse response = PaymentResponse.builder()
+                    .success(true)
+                    .status(HttpStatus.OK)
+                    .message("Payment successful")
+                    .correlationId(request.getCorrelationId())
+                    .build();
+
             walletProducer.sendMarketPaymentResponse(response);
-            log.info("Payment successful: buyer={}, seller={}, amount={}", request.getBuyerId(), request.getSellerId(), request.getAmount());
+            log.info("✅ Payment successful via {}: buyer={}, seller={}, amount={}",
+                    request.getMethod(), request.getBuyerId(), request.getSellerId(), request.getAmount());
 
         } catch (Exception e) {
             log.error("Error processing market payment: {}", e.getMessage(), e);
@@ -84,9 +176,14 @@ public class MarketPaymentConsumer {
     }
 
     private void sendErrorResponse(PaymentRequest request, String message, HttpStatus status) {
-        PaymentResponse response = PaymentResponse.builder().status(status).message(message).success(false).correlationId(request.getCorrelationId()).build();
+        PaymentResponse response = PaymentResponse.builder()
+                .success(false)
+                .status(status)
+                .message(message)
+                .correlationId(request.getCorrelationId())
+                .build();
 
         walletProducer.sendMarketPaymentResponse(response);
-        log.warn("Payment failed: {} | buyer={} seller={} status={}", message, request.getBuyerId(), request.getSellerId(), status);
+        log.warn("❌ Payment failed: {} | buyer={} seller={} status={}", message, request.getBuyerId(), request.getSellerId(), status);
     }
 }
