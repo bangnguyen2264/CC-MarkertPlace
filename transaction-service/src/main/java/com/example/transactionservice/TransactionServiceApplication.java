@@ -19,7 +19,7 @@ public class TransactionServiceApplication {
 	@PostConstruct
 	public void logConfig() {
 		VNPayConfig config = new VNPayConfig();
-
+		System.out.println("Fix kafka 1");
 		System.out.println("✅ VNPay Config loaded:");
 		System.out.println(" - API URL: " + config.getApiUrl());
 		System.out.println(" - Return URL: " + config.getReturnUrl());

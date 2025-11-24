@@ -29,6 +29,10 @@ spring:
           - path: /api/verify-requests/**
             method: [GET, DELETE, PATCH]
             access: [ADMIN, CVA]
+          - path: /api/payments/vnpay-return/**
+            method: [GET]
+            access: [PUBLIC]
+
 
       routes:
         # ================= USER SERVICE =================
@@ -99,8 +103,8 @@ spring:
           uri: lb://media-service
           predicates:
             - Path=/api/media/**
-          filters:
-            - JwtAuthenticationFilter
+#          filters:
+#            - JwtAuthenticationFilter
 
         # ================= WALLET SERVICE =================
         - id: wallet-service-docs
@@ -176,12 +180,16 @@ spring:
           filters:
             - SetPath=/v3/api-docs
 
-        - id: transaction-service
+        - id: transaction-service-transactions
           uri: lb://transaction-service
           predicates:
             - Path=/api/transactions/**
           filters:
             - JwtAuthenticationFilter
+        - id: transaction-service-payment
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/payments/**
 
       globalcors:
         cors-configurations:

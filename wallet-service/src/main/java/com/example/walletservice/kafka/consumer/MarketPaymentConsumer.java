@@ -41,38 +41,51 @@ public class MarketPaymentConsumer {
     )
     @Transactional
     public void consumeMarketPaymentRequest(PaymentRequest request) {
-        log.info("Received market payment request: buyer={}, seller={}, amount={}, method={}",
-                request.getBuyerId(), request.getSellerId(), request.getAmount(), request.getMethod());
+        log.info("Processing market payment: buyer={}, seller={}, amount={}, credit={}, method={}, corr={}",
+                request.getBuyerId(), request.getSellerId(), request.getAmount(), request.getCredit(),
+                request.getMethod(), request.getCorrelationId());
 
         try {
-            Wallet sellerWallet = walletRepository.findByOwnerId(request.getSellerId()).orElse(null);
-            if (sellerWallet == null) {
-                sendErrorResponse(request, "Seller wallet not found", HttpStatus.NOT_FOUND);
+            // === 1. Lấy Wallet & CarbonCredit (bắt buộc phải tồn tại) ===
+            Wallet sellerWallet = walletRepository.findByOwnerId(request.getSellerId())
+                    .orElse(null);
+            Wallet buyerWallet = request.getMethod() == PaymentMethod.WALLET
+                    ? walletRepository.findByOwnerId(request.getBuyerId()).orElse(null)
+                    : null;
+
+            CarbonCredit buyerCredit = carbonCreditRepository.findByOwnerId(request.getBuyerId())
+                    .orElse(null);
+            CarbonCredit sellerCredit = carbonCreditRepository.findByOwnerId(request.getSellerId())
+                    .orElse(null);
+
+            // Kiểm tra tồn tại
+            if (sellerWallet == null || buyerCredit == null || sellerCredit == null
+                    || (request.getMethod() == PaymentMethod.WALLET && buyerWallet == null)) {
+
+                String missing = "";
+                if (sellerWallet == null) missing += "seller_wallet ";
+                if (buyerCredit == null) missing += "buyer_carbon ";
+                if (sellerCredit == null) missing += "seller_carbon ";
+                if (request.getMethod() == PaymentMethod.WALLET && buyerWallet == null) missing += "buyer_wallet";
+
+                sendErrorResponse(request, "Missing required entities: " + missing.trim(), HttpStatus.NOT_FOUND);
                 return;
             }
 
-            // Nếu là thanh toán bằng ví, cần kiểm tra và cập nhật cả buyer
+            // === 2. Xử lý tiền ví (chỉ khi dùng WALLET) ===
             if (request.getMethod() == PaymentMethod.WALLET) {
-                Wallet buyerWallet = walletRepository.findByOwnerId(request.getBuyerId()).orElse(null);
-                if (buyerWallet == null) {
-                    sendErrorResponse(request, "Buyer wallet not found", HttpStatus.NOT_FOUND);
-                    return;
-                }
-
                 if (buyerWallet.getBalance() < request.getAmount()) {
-                    sendErrorResponse(request, "Insufficient balance in buyer wallet", HttpStatus.BAD_REQUEST);
+                    sendErrorResponse(request, "Insufficient balance in buyer wallet", HttpStatus.PAYMENT_REQUIRED);
                     return;
                 }
 
-                // Trừ tiền buyer, cộng tiền seller
+                // Trừ tiền người mua
                 buyerWallet.setBalance(buyerWallet.getBalance() - request.getAmount());
-                sellerWallet.setBalance(sellerWallet.getBalance() + request.getAmount());
                 walletRepository.save(buyerWallet);
-                walletRepository.save(sellerWallet);
 
-                // Lưu audit cho buyer (wallet)
+                // Audit: người mua bị trừ tiền
                 auditService.record(
-                        buyerWallet.getOwnerId(),
+                        request.getBuyerId(),
                         TransactionType.WALLET,
                         TransactionAction.WITHDRAW,
                         request.getAmount(),
@@ -80,98 +93,93 @@ public class MarketPaymentConsumer {
                         auditDescriptionUtil.buildWalletDescription(
                                 TransactionAction.WITHDRAW,
                                 request.getAmount(),
-                                buyerWallet.getOwnerId(),
-                                sellerWallet.getOwnerId(),
-                                request.getCorrelationId()
-                        ),
-                        request.getCorrelationId()
-                );
-
-                // Lưu audit cho seller (wallet)
-                auditService.record(
-                        sellerWallet.getOwnerId(),
-                        TransactionType.WALLET,
-                        TransactionAction.DEPOSIT,
-                        request.getAmount(),
-                        sellerWallet.getBalance(),
-                        auditDescriptionUtil.buildWalletDescription(
-                                TransactionAction.DEPOSIT,
-                                request.getAmount(),
-                                buyerWallet.getOwnerId(),
-                                sellerWallet.getOwnerId(),
+                                request.getBuyerId(),
+                                request.getSellerId(),
                                 request.getCorrelationId()
                         ),
                         request.getCorrelationId()
                 );
             }
 
-            // Lưu audit tín chỉ carbon cho cả buyer và seller
-            CarbonCredit buyerCredit = carbonCreditRepository.findByOwnerId(request.getBuyerId()).orElse(null);
-            CarbonCredit sellerCredit = carbonCreditRepository.findByOwnerId(request.getSellerId()).orElse(null);
+            // === 3. Cộng tiền cho người bán (LUÔN LUÔN) ===
+            sellerWallet.setBalance(sellerWallet.getBalance() + request.getAmount());
+            walletRepository.save(sellerWallet);
 
-            if (buyerCredit != null && sellerCredit != null) {
-                // Buyer + tín chỉ
-                carbonCreditService.update(buyerCredit.getId(),
-                        CarbonCreditUpdateRequest.builder()
-                                .totalCredit(buyerCredit.getTotalCredit() + request.getCredit())
-                                .build());
+            // Audit: người bán nhận tiền
+            auditService.record(
+                    request.getSellerId(),
+                    TransactionType.WALLET,
+                    TransactionAction.DEPOSIT,
+                    request.getAmount(),
+                    sellerWallet.getBalance(),
+                    auditDescriptionUtil.buildWalletDescription(
+                            TransactionAction.DEPOSIT,
+                            request.getAmount(),
+                            request.getBuyerId(),
+                            request.getSellerId(),
+                            request.getCorrelationId()
+                    ),
+                    request.getCorrelationId()
+            );
 
-                // Seller - tín chỉ
-                carbonCreditService.update(sellerCredit.getId(),
-                        CarbonCreditUpdateRequest.builder()
-                                .totalCredit(sellerCredit.getTotalCredit() - request.getCredit())
-                                .build());
+            // === 4. Cộng tín chỉ cho người mua (LUÔN LUÔN) ===
+            carbonCreditService.update(buyerCredit.getId(),
+                    CarbonCreditUpdateRequest.builder()
+                            .totalCredit(buyerCredit.getTotalCredit() + request.getCredit())
+                            .build());
 
-                // Audit buyer carbon
-                auditService.record(
-                        buyerCredit.getOwnerId(),
-                        TransactionType.CARBON_CREDIT,
-                        TransactionAction.CREDIT_BUY,
-                        request.getCredit(),
-                        buyerCredit.getTotalCredit() + request.getCredit(),
-                        auditDescriptionUtil.buildCarbonDescription(
-                                TransactionAction.CREDIT_BUY,
-                                request.getCredit(),
-                                sellerCredit.getOwnerId(),
-                                buyerCredit.getOwnerId(),
-                                request.getCorrelationId()
-                        ),
-                        request.getCorrelationId()
-                );
+            // Audit: người mua nhận tín chỉ
+            auditService.record(
+                    request.getBuyerId(),
+                    TransactionType.CARBON_CREDIT,
+                    TransactionAction.CREDIT_BUY,
+                    request.getCredit(),
+                    buyerCredit.getTotalCredit() + request.getCredit(),
+                    auditDescriptionUtil.buildCarbonDescription(
+                            TransactionAction.CREDIT_BUY,
+                            request.getCredit(),
+                            request.getSellerId(),
+                            request.getBuyerId(),
+                            request.getCorrelationId()
+                    ),
+                    request.getCorrelationId()
+            );
 
-                // Audit seller carbon
-                auditService.record(
-                        sellerCredit.getOwnerId(),
-                        TransactionType.CARBON_CREDIT,
-                        TransactionAction.CREDIT_TRADE,
-                        request.getCredit(),
-                        sellerCredit.getTotalCredit() - request.getCredit(),
-                        auditDescriptionUtil.buildCarbonDescription(
-                                TransactionAction.CREDIT_TRADE,
-                                request.getCredit(),
-                                sellerCredit.getOwnerId(),
-                                buyerCredit.getOwnerId(),
-                                request.getCorrelationId()
-                        ),
-                        request.getCorrelationId()
-                );
-            }
+            // Audit: người bán đã bán tín chỉ (đã bị khóa từ trước)
+            auditService.record(
+                    request.getSellerId(),
+                    TransactionType.CARBON_CREDIT,
+                    TransactionAction.CREDIT_TRADE,
+                    request.getCredit(),
+                    sellerCredit.getTotalCredit(), // số dư hiện tại (đã trừ trước đó)
+                    auditDescriptionUtil.buildCarbonDescription(
+                            TransactionAction.CREDIT_TRADE,
+                            request.getCredit(),
+                            request.getSellerId(),
+                            request.getBuyerId(),
+                            request.getCorrelationId()
+                    ),
+                    request.getCorrelationId()
+            );
 
-            // Gửi phản hồi thành công
+            // === 5. Gửi phản hồi thành công ===
             PaymentResponse response = PaymentResponse.builder()
                     .success(true)
                     .status(HttpStatus.OK)
-                    .message("Payment successful")
+                    .message("Payment and credit transfer completed successfully")
                     .correlationId(request.getCorrelationId())
                     .build();
 
             walletProducer.sendMarketPaymentResponse(response);
-            log.info("✅ Payment successful via {}: buyer={}, seller={}, amount={}",
-                    request.getMethod(), request.getBuyerId(), request.getSellerId(), request.getAmount());
+
+            log.info("Market payment SUCCESS | Method: {} | Buyer {} +{} credits | Seller {} +{} VND | Corr: {}",
+                    request.getMethod(), request.getBuyerId(), request.getCredit(),
+                    request.getSellerId(), request.getAmount(), request.getCorrelationId());
 
         } catch (Exception e) {
-            log.error("Error processing market payment: {}", e.getMessage(), e);
-            sendErrorResponse(request, "Internal server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Failed to process market payment request: {}", e.getMessage(), e);
+            sendErrorResponse(request, "Internal processing error", HttpStatus.INTERNAL_SERVER_ERROR);
+            // @Transactional sẽ tự rollback
         }
     }
 

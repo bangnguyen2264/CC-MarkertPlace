@@ -3,8 +3,6 @@ package com.example.transactionservice.transaction;
 import com.example.commondto.constant.PaymentMethod;
 import com.example.commondto.constant.TransactionStatus;
 import com.example.commondto.dto.request.MarketPurchaseMessage;
-import com.example.commondto.dto.request.PaymentEvent;
-import com.example.commondto.dto.response.PaymentResponse;
 import com.example.commondto.exception.BadRequestException;
 import com.example.commondto.exception.NotFoundException;
 import com.example.commondto.utils.CrudUtils;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -76,13 +73,11 @@ public class TransactionServiceImpl implements TransactionService {
         // 2. Cập nhật status
         tx.setStatus(status);
 
-        // 3. Chỉ xử lý payment nếu là SUCCESS và không phải VN_PAY
+        // 3. Chỉ xử lý payment nếu là SUCCESS và bằng VN_PAY
         if (status == TransactionStatus.SUCCESS
                 && tx.getPaymentMethod() != null
-                && tx.getPaymentMethod() != PaymentMethod.VN_PAY) {
+                && tx.getPaymentMethod() == PaymentMethod.VN_PAY) {
 
-            // Kiểm tra walletIntegration trước khi gọi
-            if (walletIntegration != null) {
                 MarketPaymentResponse response = walletIntegration.pay(tx);
 
                 // Kiểm tra response và status
@@ -91,8 +86,8 @@ public class TransactionServiceImpl implements TransactionService {
                     if (transactionProducer != null) {
                         transactionProducer.sendPaymentEvent(tx.getListingId());
                     }
+
                 }
-            }
         }
 
         // 4. Lưu thay đổi

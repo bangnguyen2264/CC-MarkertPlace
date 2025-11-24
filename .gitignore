@@ -34,6 +34,6 @@ build/
 ngrok_recovery_codes.txt
 ../transaction-service/.env
 prometheus
-grafana
+grafana/
 config-server/src/main/resources/configurations/.env
 config-server/src/main/resources/configurations/transaction-service.yml

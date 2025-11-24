@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().value();
             String method = request.getMethod() != null ? request.getMethod().name() : "UNKNOWN";
-
+            log.info("Request URI: " + request.getURI());
             SecurityRule rule = ruleMatcher.match(path, request.getMethod());
 
             // 🔓 Nếu là PUBLIC → bỏ qua xác thực

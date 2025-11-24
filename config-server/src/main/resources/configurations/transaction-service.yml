@@ -75,3 +75,4 @@ vnpay:
   return_url: https://noncompliantly-pseudomodest-latonya.ngrok-free.dev/api/payments/vnpay-return
   version: 2.1.0
   curr_code: VND
+  frontend_url: ${GATEWAY_URL:http://localhost:4000}

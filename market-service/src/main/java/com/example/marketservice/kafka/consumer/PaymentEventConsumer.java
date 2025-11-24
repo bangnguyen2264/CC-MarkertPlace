@@ -21,6 +21,7 @@ public class PaymentEventConsumer {
             containerFactory = "paymentEventKafkaListenerFactory"
     )
     public void consumePaymentEvent(String listingId) {
+        log.info("Consuming payment event for listing {} is sold", listingId);
         marketListingRepository.findById(listingId).ifPresent(marketListing -> {
             marketListing.setStatus(ListingStatus.SOLD);
             marketListingRepository.save(marketListing);

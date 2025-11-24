@@ -55,6 +55,7 @@ public class WalletServiceImpl implements WalletService {
     public WalletResponse create(String ownerId) {
         Wallet wallet = Wallet.builder()
                 .ownerId(ownerId)
+                .balance(0.0)
                 .build();
 
         walletRepository.save(wallet);

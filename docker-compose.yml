@@ -88,6 +88,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +121,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -151,6 +153,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -183,6 +186,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -215,6 +219,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -247,6 +252,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -279,6 +285,7 @@ services:
       - DB_HOST=postgres
       - KAFKA_BOOTSTRAP=kafka
       - EUREKA_HOSTNAME=eureka-server
+
     depends_on:
       postgres:
         condition: service_healthy

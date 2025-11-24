@@ -15,6 +15,7 @@ public class TransactionProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendPaymentEvent(String listingId) {
+        log.info("Sending payment event to listing " + listingId);
         kafkaTemplate.send(KafkaTopics.MARKET_PAYMENT_EVENT, listingId);
     }
 }

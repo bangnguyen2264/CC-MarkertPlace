@@ -16,7 +16,7 @@ public class WalletConsumer {
     private final WalletIntegration walletIntegration;
 
     @KafkaListener(
-            topics = KafkaTopics.WALLET_CREATION_RESPONSE,
+            topics = KafkaTopics.MARKET_PAYMENT_RESPONSE,
             groupId = "${spring.application.name}-group",
             containerFactory = "paymentResponseKafkaListenerFactory"
     )

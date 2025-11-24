@@ -68,9 +68,10 @@ public class VehicleServiceImpl implements VehicleService {
                 .color(vehicleRequest.getColor())
                 .note(vehicleRequest.getNote())
                 .build();
+        Double newDistanceKm = vehicle.getMileage() != null ? vehicle.getMileage() : 0.0;
         Journey journey = Journey.builder()
                 .vehicle(vehicle)
-                .distanceKm(0.0)
+                .distanceKm(newDistanceKm)
                 .averageSpeed(0.0)
                 .energyUsed(0.0)
                 .co2Reduced(0.0)
