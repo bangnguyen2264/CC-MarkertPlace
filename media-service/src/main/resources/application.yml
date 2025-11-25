@@ -4,11 +4,5 @@ spring:
       - optional:configserver:http://${CONFIG_SERVER_URL:localhost}:8888
   application:
     name: media-service
-  data:
-    redis:
-      host: localhost
-      port: 6379
 
-  cache:
-    type: redis
 
