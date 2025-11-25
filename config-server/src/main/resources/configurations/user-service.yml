@@ -6,7 +6,14 @@ spring:
     web-application-type: servlet
   application:
     name: user-service
-
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: 6379
+    timeout: 2000ms
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/oose_db?timezone=Asia/Ho_Chi_Minh
     username: postgres

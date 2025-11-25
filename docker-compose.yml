@@ -418,5 +418,5 @@ networks:
 
 volumes:
   postgres_data:
-  redis-data:
+  redis_data:
   prometheus-data:
