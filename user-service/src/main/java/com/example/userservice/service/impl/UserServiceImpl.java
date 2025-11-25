@@ -9,6 +9,8 @@ import com.example.userservice.model.filter.UserFilter;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +71,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
+    @Cacheable(value = "userById", key = "#id")
     public UserResponse getById(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -76,6 +79,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "userById", key = "#id")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     public UserResponse update(String id,UserUpdateRequest userUpdateRequest) {
@@ -90,6 +94,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "userById", key = "#id")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void delete(String id) {

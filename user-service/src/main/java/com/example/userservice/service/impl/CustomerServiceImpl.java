@@ -10,6 +10,8 @@ import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.CustomerService;
 import com.example.userservice.utils.UserUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,11 +24,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     @Override
+    @Cacheable(value = "userProfile", key = "#root.methodName + ':' + T(com.example.userservice.utils.UserUtils).getMe()")
     public UserResponse getProfile() {
         return UserResponse.from(getCurrentUser());
     }
 
+
     @Override
+    @CacheEvict(value = "userProfile", key = "'getProfile:' + T(com.example.userservice.utils.UserUtils).getMe()")
     public UserResponse updateProfile(UserUpdateRequest user) {
         User userToUpdate = getCurrentUser();
 
@@ -39,6 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @CacheEvict(value = "userProfile", key = "'getProfile:' + T(com.example.userservice.utils.UserUtils).getMe()")
     public String changePassword(ChangePasswordRequest changePasswordRequest) {
         User user = getCurrentUser();
 

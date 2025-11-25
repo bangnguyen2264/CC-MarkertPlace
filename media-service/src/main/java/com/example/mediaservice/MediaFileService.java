@@ -3,6 +3,7 @@ package com.example.mediaservice;
 
 import com.example.commondto.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+
 public class MediaFileService {
     private final MediaFileRepository mediaFileRepository;
     private static final String IMAGES_PATH = "/api/media/get/";
@@ -45,31 +47,33 @@ public class MediaFileService {
             throw new BadRequestException("Invalid file type");
         }
     }
-
+    @Cacheable(value = "mediaFile", key = "#id")
+    public MediaFile getFileFromCache(String id) {
+        return mediaFileRepository.findById(id).orElse(null);
+    }
 
     public ResponseEntity<byte[]> getImageById(String id) throws IOException {
-        Optional<MediaFile> dbFile = mediaFileRepository.findById(id);
 
-        if (dbFile.isPresent()) {
-            MediaFile mediaFile = dbFile.get();
-            byte[] fileData;
+        MediaFile mediaFile = getFileFromCache(id);
 
-            if (mediaFile.getType() != null && mediaFile.getType().startsWith("image/")) {
-                // Ảnh thì giải nén
-                fileData = ImageUtils.decompressImage(mediaFile.getData());
-            } else {
-                // File văn bản thì giữ nguyên
-                fileData = mediaFile.getData();
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.valueOf(mediaFile.getType()))
-                    .header("Content-Disposition", "inline; filename=\"" + mediaFile.getName() + "\"")
-                    .body(fileData);
-        } else {
+        if (mediaFile == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        byte[] fileData;
+
+        if (mediaFile.getType() != null && mediaFile.getType().startsWith("image/")) {
+            fileData = ImageUtils.decompressImage(mediaFile.getData());
+        } else {
+            fileData = mediaFile.getData();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(mediaFile.getType()))
+                .header("Content-Disposition", "inline; filename=\"" + mediaFile.getName() + "\"")
+                .body(fileData);
     }
+
 
 
 
