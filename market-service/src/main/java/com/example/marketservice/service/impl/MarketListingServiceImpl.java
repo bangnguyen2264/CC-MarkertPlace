@@ -144,8 +144,8 @@ public class MarketListingServiceImpl implements MarketListingService {
             if (filter.getType() != null) {
                 predicates.add(cb.equal(root.get("type"), filter.getType()));
             }
-            if (filter.getStatus() != null) {
-                predicates.add(cb.equal(root.get("status"), filter.getStatus()));
+            if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+                predicates.add(root.get("status").in(filter.getStatus()));
             }
 
             // --- Price range ---

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -37,6 +38,11 @@ public class VehicleResponse {
 
     private VehicleTypeResponse vehicleType;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+
     public static VehicleResponse from(Vehicle vehicle) {
         return VehicleResponse.builder()
                 .id(vehicle.getId())
@@ -52,6 +58,8 @@ public class VehicleResponse {
                 .verified(vehicle.isVerified())
                 .registrationImageUrl(vehicle.getRegistrationImageUrl())
                 .note(vehicle.getNote())
+                .createdAt(vehicle.getCreatedAt())
+                .updatedAt(vehicle.getUpdatedAt())
                 .build();
     }
 }

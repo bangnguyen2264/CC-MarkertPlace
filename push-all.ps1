@@ -20,7 +20,7 @@ function Get-CurrentVersion {
     if (Test-Path $VERSION_FILE) {
         return Get-Content $VERSION_FILE -Raw | Trim
     } else {
-        return "1.0.3"
+        return "1.0.0-1"
     }
 }
 
@@ -35,7 +35,7 @@ function Increment-Version($current) {
         $build = [int]$matches[2] + 1
         return "$base-$build"
     } else {
-        return "1.1.0"
+        return "1.1.1-4"
     }
 }
 

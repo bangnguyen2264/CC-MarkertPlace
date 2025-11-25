@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -20,7 +21,7 @@ public class MarketListingFilter extends BaseFilter {
     private String sellerId;        // ID người bán
     private String creditId;        // ID tín chỉ carbon
     private ListingType type;       // FIXED_PRICE / AUCTION
-    private ListingStatus status;   // ACTIVE / SOLD / CANCELED / EXPIRED
+    private List<ListingStatus> status;   // ACTIVE / SOLD / CANCELED / EXPIRED
     @Positive
     private Double minPrice;        // giá thấp nhất
     @Positive

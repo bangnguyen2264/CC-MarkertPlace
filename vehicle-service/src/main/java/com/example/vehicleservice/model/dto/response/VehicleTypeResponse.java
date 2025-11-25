@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * DTO trả về thông tin loại xe điện
  */
@@ -24,12 +26,18 @@ public class VehicleTypeResponse {
     @Schema(description = "Lượng phát thải CO₂ trên mỗi km (kg/km)", example = "0.12")
     private double co2PerKm;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     public static VehicleTypeResponse from(VehicleType vehicleType) {
         return VehicleTypeResponse.builder()
                 .id(vehicleType.getId())
                 .manufacturer(vehicleType.getManufacturer())
                 .model(vehicleType.getModel())
                 .co2PerKm(vehicleType.getCo2PerKm())
+                .createdAt(vehicleType.getCreatedAt())
+                .updatedAt(vehicleType.getUpdatedAt())
                 .build();
     }
 }

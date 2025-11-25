@@ -5,6 +5,7 @@ import com.example.vehicleservice.model.entity.JourneyHistory;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -16,6 +17,9 @@ public class JourneyHistoryResponse {
     private Double energyUsed;
     private List<String> certificateImageUrl;
     private Status status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
 
     public static JourneyHistoryResponse from (JourneyHistory journeyHistory) {
         return JourneyHistoryResponse.builder()
@@ -25,6 +29,7 @@ public class JourneyHistoryResponse {
                 .energyUsed(journeyHistory.getEnergyUsed())
                 .certificateImageUrl(journeyHistory.getCertificateImageUrl())
                 .status(journeyHistory.getStatus())
+                .createdAt(journeyHistory.getCreatedAt())
                 .build();
     }
 

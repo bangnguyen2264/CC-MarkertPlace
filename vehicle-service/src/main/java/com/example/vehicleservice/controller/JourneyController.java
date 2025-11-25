@@ -7,7 +7,9 @@ import com.example.vehicleservice.model.filter.JourneyFilter;
 import com.example.vehicleservice.service.JourneyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +28,7 @@ public class JourneyController {
     // 🔹 Lấy danh sách lịch sử hành trình (có filter & phân trang)
     @GetMapping
     @Operation(summary = "Get all journey histories with filters")
-    public ResponseEntity<List<JourneyHistoryResponse>> getAllJourneyHistory(JourneyFilter filter) {
+    public ResponseEntity<List<JourneyHistoryResponse>> getAllJourneyHistory(@Valid @ParameterObject JourneyFilter filter) {
         return ResponseEntity.ok(journeyService.getAllJourneyHistory(filter));
     }
 

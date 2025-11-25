@@ -61,6 +61,10 @@ public class AuditServiceImpl implements AuditService {
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("ownerId"), auditFilter.getOwnerId()));
         }
+        if (auditFilter.getType() != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("type"), auditFilter.getType()));
+        }
         if (auditFilter.getAction() != null) {
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("action"), auditFilter.getAction()));
