@@ -35,7 +35,7 @@ function Increment-Version($current) {
         $build = [int]$matches[2] + 1
         return "$base-$build"
     } else {
-        return "1.1.1-4"
+        return "1.1.1-11"
     }
 }
 

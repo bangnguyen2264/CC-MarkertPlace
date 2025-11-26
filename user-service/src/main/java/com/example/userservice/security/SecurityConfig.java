@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -53,7 +54,17 @@ public class SecurityConfig {
             cfg.setAllowedHeaders(List.of("*"));
             cfg.setAllowCredentials(true);
             return cfg;
-        })).exceptionHandling(exception -> exception.authenticationEntryPoint(this::handleUnauthorized).accessDeniedHandler(this::handleForbidden)).authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll().requestMatchers(ADMIN_ENDPOINTS).hasAnyAuthority(Role.ADMIN.name()).anyRequest().authenticated()).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        })).exceptionHandling(exception ->
+                exception
+                        .authenticationEntryPoint(this::handleUnauthorized)
+                        .accessDeniedHandler(this::handleForbidden))
+                .authorizeHttpRequests(
+                        auth -> auth
+                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(HttpMethod.GET, ADMIN_ENDPOINTS).authenticated()
+                                .requestMatchers(ADMIN_ENDPOINTS).hasAnyAuthority(Role.ADMIN.name())
+                                .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

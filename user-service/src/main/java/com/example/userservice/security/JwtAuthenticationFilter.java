@@ -42,21 +42,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // Log để debug
-        log.info("=== JWT Filter Check ===");
-        log.info("Method: {}", method);
-        log.info("Path: {}", path);
-        log.info("Query: {}", request.getQueryString());
-
         boolean isPublic = PUBLIC_PATTERNS.stream()
                 .anyMatch(pattern -> {
                     boolean matches = pathMatcher.match(pattern, path);
-                    log.info("Pattern '{}' matches '{}': {}", pattern, path, matches);
                     return matches;
                 });
-
-        log.info("Is public path: {}", isPublic);
-        log.info("========================");
 
         return isPublic;
     }
@@ -68,13 +58,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        log.warn("JWT Filter is processing path: {}", request.getRequestURI());
 
         try {
             String token = jwtService.extractToken(request);
 
             if (token == null) {
-                log.warn("Missing Authorization header for path: {}", request.getRequestURI());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"Missing Authorization header\"}");
@@ -82,7 +70,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             if (!jwtService.validateAccessToken(token)) {
-                log.warn("Invalid JWT token for path: {}", request.getRequestURI());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"Invalid Authorization token\"}");
@@ -91,10 +78,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             Authentication auth = jwtService.createAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
-            log.debug("Successfully authenticated user for path: {}", request.getRequestURI());
 
         } catch (Exception e) {
-            log.error("Cannot set user authentication for path: {}", request.getRequestURI(), e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Authentication failed\"}");

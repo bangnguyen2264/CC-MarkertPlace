@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -27,12 +28,11 @@ public class PaymentController {
     private final TransactionService transactionService;
 
     /**
-     * Xử lý VNPay return URL - Update transaction status
+     * Xử lý VNPay return URL - Update transaction status và redirect về frontend
+     * (Cách 2: Backend xử lý callback và redirect về frontend)
      */
     @GetMapping("/vnpay-return")
-    public ResponseEntity<Map<String, String>> handleVNPayReturn(@RequestParam Map<String, String> params) {
-        Map<String, String> response = new HashMap<>();
-
+    public void handleVNPayReturn(@RequestParam Map<String, String> params, HttpServletResponse response) throws Exception {
         try {
             // 1. Verify signature
             String vnpSecureHash = params.get("vnp_SecureHash");
@@ -44,9 +44,9 @@ public class PaymentController {
 
             if (!calculatedHash.equalsIgnoreCase(vnpSecureHash)) {
                 log.error("❌ Invalid signature");
-                response.put("status", "error");
-                response.put("message", "Invalid signature");
-                return ResponseEntity.badRequest().body(response);
+                String redirectUrl = buildCallbackUrl("failed", null, "Chữ ký không hợp lệ");
+                response.sendRedirect(redirectUrl);
+                return;
             }
 
             // 2. Lấy thông tin
@@ -54,6 +54,8 @@ public class PaymentController {
             String txnRef = params.get("vnp_TxnRef");
             String vnpayTransactionNo = params.get("vnp_TransactionNo");
             String bankCode = params.get("vnp_BankCode");
+            String amount = params.get("vnp_Amount");
+            String payDate = params.get("vnp_PayDate");
 
             log.info("📥 VNPay callback: txn={}, code={}", txnRef, responseCode);
 
@@ -61,36 +63,97 @@ public class PaymentController {
             Transaction transaction = transactionService.getById(txnRef);
 
             // 4. Update status
+            String callbackStatus = "failed";
+            String callbackMessage = "Giao dịch không thành công";
+
             if ("00".equals(responseCode)) {
                 transaction.setStatus(TransactionStatus.SUCCESS);
                 transaction.setPaidAt(LocalDateTime.now());
-
-
                 transactionService.update(transaction.getId(), TransactionStatus.SUCCESS);
 
+                callbackStatus = "success";
+                callbackMessage = "Thanh toán thành công";
                 log.info("✅ Payment SUCCESS: {}", txnRef);
-
-                response.put("status", "success");
-                response.put("message", "Payment successful");
             } else {
                 transaction.setStatus(TransactionStatus.FAILED);
                 transactionService.update(transaction.getId(), TransactionStatus.FAILED);
 
+                callbackMessage = getVNPayErrorMessage(responseCode);
                 log.warn("⚠️ Payment FAILED: {} - code: {}", txnRef, responseCode);
-
-                response.put("status", "failed");
-                response.put("message", "Payment failed");
             }
 
-            response.put("transactionId", txnRef);
-            return ResponseEntity.ok(response);
+            // 5. Redirect về frontend với tất cả thông tin
+            String redirectUrl = buildCallbackUrl(
+                callbackStatus,
+                transaction.getId(),
+                callbackMessage,
+                amount,
+                bankCode,
+                payDate,
+                vnpayTransactionNo
+            );
+
+            log.info("🔀 Redirecting to: {}", redirectUrl);
+            response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
             log.error("❌ Error processing callback", e);
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            String redirectUrl = buildCallbackUrl("failed", null, "Lỗi xử lý giao dịch: " + e.getMessage());
+            response.sendRedirect(redirectUrl);
         }
+    }
+
+    /**
+     * Xây dựng URL callback cho frontend (đầy đủ thông tin)
+     */
+    private String buildCallbackUrl(String status, String transactionId, String message,
+                                    String amount, String bankCode, String payDate, String vnpTransactionNo) {
+        // TODO: Cập nhật với domain frontend của bạn
+        String frontendUrl = "http://localhost:5173/buyer/payment/callback";
+        
+        try {
+            StringBuilder url = new StringBuilder(frontendUrl);
+            url.append("?status=").append(status);
+            url.append("&transactionId=").append(transactionId != null && !transactionId.isEmpty() ? transactionId : "");
+            url.append("&message=").append(URLEncoder.encode(message, StandardCharsets.UTF_8));
+            url.append("&amount=").append(amount != null ? amount : "");
+            url.append("&bankCode=").append(bankCode != null ? bankCode : "");
+            url.append("&payDate=").append(payDate != null ? payDate : "");
+            url.append("&vnpTransactionNo=").append(vnpTransactionNo != null ? vnpTransactionNo : "");
+            
+            return url.toString();
+        } catch (Exception e) {
+            log.error("Error building callback URL", e);
+            return frontendUrl + "?status=error&message=" + URLEncoder.encode("Lỗi tạo URL callback", StandardCharsets.UTF_8);
+        }
+    }
+
+    /**
+     * Xây dựng URL callback cho frontend (chỉ thông tin cơ bản)
+     */
+    private String buildCallbackUrl(String status, String transactionId, String message) {
+        return buildCallbackUrl(status, transactionId, message, null, null, null, null);
+    }
+
+    /**
+     * Lấy thông điệp lỗi VNPay theo mã lỗi
+     */
+    private String getVNPayErrorMessage(String responseCode) {
+        Map<String, String> errorMessages = new HashMap<>();
+        errorMessages.put("07", "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo)");
+        errorMessages.put("09", "Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking");
+        errorMessages.put("10", "Xác thực thông tin thẻ/tài khoản không đúng quá 3 lần");
+        errorMessages.put("11", "Đã hết hạn chờ thanh toán");
+        errorMessages.put("12", "Thẻ/Tài khoản bị khóa");
+        errorMessages.put("13", "Nhập sai mật khẩu xác thực giao dịch (OTP)");
+        errorMessages.put("24", "Khách hàng hủy giao dịch");
+        errorMessages.put("51", "Tài khoản không đủ số dư");
+        errorMessages.put("65", "Vượt quá hạn mức giao dịch trong ngày");
+        errorMessages.put("75", "Ngân hàng đang bảo trì");
+        errorMessages.put("79", "Nhập sai mật khẩu thanh toán quá số lần");
+        errorMessages.put("99", "Các lỗi khác");
+
+        return errorMessages.getOrDefault(responseCode, "Giao dịch không thành công (Mã: " + responseCode + ")");
     }
 
     private String calculateSignature(Map<String, String> params) throws Exception {

@@ -24,6 +24,6 @@ public class WalletProducer {
 
     public void sendMarketPaymentResponse(PaymentResponse response) {
         log.info("Sending payment response");
-        kafkaTemplate.send(KafkaTopics.WALLET_CREATION_RESPONSE, response);
+        kafkaTemplate.send(KafkaTopics.MARKET_PAYMENT_RESPONSE, response);
     }
 }
