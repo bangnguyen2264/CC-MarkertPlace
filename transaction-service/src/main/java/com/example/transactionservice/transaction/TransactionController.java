@@ -23,7 +23,7 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    @Operation(summary = "Tạo transaction mới")
+    @Operation(summary = "Tạo niêm yết mới")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Transaction> createTransaction(@Valid @ModelAttribute MarketPurchaseMessage message) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionService.createPendingTransaction(message));
@@ -39,7 +39,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getById(id));
     }
 
-    @Operation(summary = "Cập nhật thông tin transaction")
+    @Operation(summary = "Cập nhật thông tin niêm yết")
     @PatchMapping("/{id}")
     public ResponseEntity<Transaction> update(@PathVariable("id") String id, @RequestParam("status") TransactionStatus status) {
         return ResponseEntity.ok(transactionService.update(id, status));
