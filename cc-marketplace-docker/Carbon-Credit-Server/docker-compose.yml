@@ -1,0 +1,468 @@
+﻿version: '3.8'
+
+services:
+  # ==================================================================
+  # 1. CONFIG SERVER
+  # ==================================================================
+  config-server:
+    image: henryngyn2264/config-server:1.1.2
+    container_name: config-server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config-server/src/main/resources/configurations:/configurations
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - EUREKA_HOSTNAME=eureka-server
+      - GATEWAY_URL=api-gateway
+      - KAFKA_BOOTSTRAP=kafka
+      - REDIS_HOST=redis
+      - DB_HOST=postgres
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==================================================================
+  # 2. EUREKA SERVER
+  # ==================================================================
+  eureka-server:
+    image: henryngyn2264/eureka-server:1.1.2
+    container_name: eureka-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=config-server
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  # ==================================================================
+  # 3. API GATEWAY
+  # ==================================================================
+  api-gateway:
+    image: henryngyn2264/api-gateway:1.1.2
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8222:8222"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - CONFIG_SERVER_URL=config-server
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  # ==================================================================
+  # 4. USER SERVICE
+  # ==================================================================
+  user-service:
+    image: henryngyn2264/user-service:1.1.2
+    container_name: user-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 5. VERIFICATION SERVICE
+  # ==================================================================
+  verification-service:
+    image: henryngyn2264/verification-service:1.1.2
+    container_name: verification-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 6. VEHICLE SERVICE
+  # ==================================================================
+  vehicle-service:
+    image: henryngyn2264/vehicle-service:1.1.2
+    container_name: vehicle-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 7. WALLET SERVICE
+  # ==================================================================
+  wallet-service:
+    image: henryngyn2264/wallet-service:1.1.2
+    container_name: wallet-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 8. MEDIA SERVICE
+  # ==================================================================
+  media-service:
+    image: henryngyn2264/media-service:1.1.2
+    container_name: media-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 9. MARKET SERVICE
+  # ==================================================================
+  market-service:
+    image: henryngyn2264/market-service:1.1.2
+    container_name: market-service
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 10. TRANSACTION SERVICE
+  # ==================================================================
+  transaction-service:
+    image: henryngyn2264/transaction-service:1.1.2
+    container_name: transaction-service
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    environment:
+      - CONFIG_SERVER_URL=config-server
+      - DB_HOST=postgres
+      - KAFKA_BOOTSTRAP=kafka
+      - EUREKA_HOSTNAME=eureka-server
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ==================================================================
+  # 11. NGROK
+  # ==================================================================
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    restart: unless-stopped
+    command: >
+      http api-gateway:8222
+      --authtoken=350FGvfDE0KqJXklWdjB1fSAVVw_3sJLnpD2SxvZHtxAgxZXT
+      --log=stdout
+    ports:
+      - "4040:4040"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+  # ==================================================================
+  # 12. SUPPORT SERVICES
+  # ==================================================================
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: oose_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9495:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
+      - prometheus-data:/prometheus
+    networks:
+      - microservices-network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    depends_on:
+      - prometheus
+    volumes:
+      - ./grafana:/var/lib/grafana
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus-data:
+
+
+
+
+
+
+
+
+
+
+

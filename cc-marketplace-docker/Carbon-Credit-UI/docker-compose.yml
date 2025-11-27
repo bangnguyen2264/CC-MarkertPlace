@@ -1,0 +1,26 @@
+services:
+  # ==================================================================
+  # CARBON CREDIT FRONTEND
+  # ==================================================================
+  carbon-frontend:
+    image: henryngyn2264/carbon-frontend:1.0.2
+    container_name: carbon-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Connect to backend microservices network
+# This network is created by Carbon-Credit-Server/docker-compose.yml
+networks:
+  microservices-network:
+    external: true
