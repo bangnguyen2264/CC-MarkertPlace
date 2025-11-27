@@ -14,6 +14,7 @@ import com.example.walletservice.repository.CarbonCreditRepository;
 import com.example.walletservice.repository.WalletRepository;
 import com.example.walletservice.service.AuditService;
 import com.example.walletservice.service.CarbonCreditService;
+import com.example.walletservice.service.ProcessedPaymentService;
 import com.example.walletservice.utils.AuditDescriptionUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class MarketPaymentConsumer {
     private final WalletProducer walletProducer;
     private final AuditService auditService;
     private final AuditDescriptionUtil auditDescriptionUtil;
+    private final ProcessedPaymentService processedPaymentService;
 
     @KafkaListener(
             topics = KafkaTopics.MARKET_PAYMENT_REQUEST,
@@ -46,6 +48,20 @@ public class MarketPaymentConsumer {
                 request.getMethod(), request.getCorrelationId());
 
         try {
+            // === 0. Idempotency Check - Kiểm tra đã xử lý correlationId này chưa ===
+            if (processedPaymentService.isProcessed(request.getCorrelationId())) {
+                log.warn("⚠️ Duplicate payment request detected, correlationId={} already processed. Skipping.",
+                        request.getCorrelationId());
+                // Vẫn gửi response thành công để transaction-service không bị timeout
+                PaymentResponse response = PaymentResponse.builder()
+                        .success(true)
+                        .status(HttpStatus.OK)
+                        .message("Payment already processed (idempotent)")
+                        .correlationId(request.getCorrelationId())
+                        .build();
+                walletProducer.sendMarketPaymentResponse(response);
+                return;
+            }
             // === 1. Lấy Wallet & CarbonCredit (bắt buộc phải tồn tại) ===
             Wallet sellerWallet = walletRepository.findByOwnerId(request.getSellerId())
                     .orElse(null);
@@ -162,7 +178,10 @@ public class MarketPaymentConsumer {
                     request.getCorrelationId()
             );
 
-            // === 5. Gửi phản hồi thành công ===
+            // === 5. Đánh dấu correlationId đã xử lý (idempotency) ===
+            processedPaymentService.markAsProcessed(request.getCorrelationId());
+
+            // === 6. Gửi phản hồi thành công ===
             PaymentResponse response = PaymentResponse.builder()
                     .success(true)
                     .status(HttpStatus.OK)

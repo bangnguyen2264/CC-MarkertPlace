@@ -6,6 +6,8 @@ import com.example.walletservice.model.entity.Audit;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 public class AuditResponse {
@@ -17,6 +19,9 @@ public class AuditResponse {
     private Double balanceAfter;
     private String description;
     private String referenceId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
 
     public static AuditResponse from(Audit audit) {
         return AuditResponse.builder()
@@ -28,6 +33,8 @@ public class AuditResponse {
                 .balanceAfter(audit.getBalanceAfter())
                 .description(audit.getDescription())
                 .referenceId(audit.getReferenceId())
+                .createdAt(audit.getCreatedAt())
+                .updatedAt(audit.getUpdatedAt())
                 .build();
     }
 }

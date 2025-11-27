@@ -76,7 +76,7 @@ public class UserServiceImpl implements UserService {
 // -----------------------------
     @Override
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    @Cacheable(value = "userById", key = "'user:' + #id")
+    @Cacheable(value = "userById", key = "'user:' + #root.args[0]")
     public UserResponse getById(String id) {
         User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         return mapToResponseDto(user);

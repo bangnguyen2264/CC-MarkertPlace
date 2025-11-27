@@ -70,13 +70,23 @@ public class TransactionServiceImpl implements TransactionService {
     public Transaction update(String id, TransactionStatus status) {
         // 1. Kiểm tra transaction tồn tại
         Transaction tx = getById(id);
-        // 2. Cập nhật status
+        
+        // 2. Kiểm tra nếu transaction đã ở trạng thái SUCCESS rồi thì không xử lý lại
+        if (tx.getStatus() == TransactionStatus.SUCCESS) {
+            log.warn("⚠️ Transaction {} already SUCCESS, skipping duplicate update", id);
+            return tx;
+        }
+        
+        // 3. Cập nhật status
         tx.setStatus(status);
 
-        // 3. Chỉ xử lý payment nếu là SUCCESS và bằng VN_PAY
+        // 4. Chỉ xử lý payment nếu là SUCCESS và bằng VN_PAY
         if (status == TransactionStatus.SUCCESS
                 && tx.getPaymentMethod() != null
                 && tx.getPaymentMethod() == PaymentMethod.VN_PAY) {
+                
+                // Set paidAt khi thanh toán thành công
+                tx.setPaidAt(LocalDateTime.now());
 
                 MarketPaymentResponse response = walletIntegration.pay(tx);
 
@@ -90,7 +100,7 @@ public class TransactionServiceImpl implements TransactionService {
                 }
         }
 
-        // 4. Lưu thay đổi
+        // 5. Lưu thay đổi
         return repository.save(tx);
     }
 

@@ -62,20 +62,18 @@ public class PaymentController {
             // 3. Get transaction
             Transaction transaction = transactionService.getById(txnRef);
 
-            // 4. Update status
+            // 4. Update status - chỉ gọi update() một lần duy nhất
             String callbackStatus = "failed";
             String callbackMessage = "Giao dịch không thành công";
 
             if ("00".equals(responseCode)) {
-                transaction.setStatus(TransactionStatus.SUCCESS);
-                transaction.setPaidAt(LocalDateTime.now());
+                // Gọi update() sẽ xử lý toàn bộ logic: set status, paidAt, gọi walletIntegration.pay()
                 transactionService.update(transaction.getId(), TransactionStatus.SUCCESS);
 
                 callbackStatus = "success";
                 callbackMessage = "Thanh toán thành công";
                 log.info("✅ Payment SUCCESS: {}", txnRef);
             } else {
-                transaction.setStatus(TransactionStatus.FAILED);
                 transactionService.update(transaction.getId(), TransactionStatus.FAILED);
 
                 callbackMessage = getVNPayErrorMessage(responseCode);

@@ -15,13 +15,16 @@ import org.springframework.stereotype.Service;
 public class TransactionConsumer {
     private final TransactionService transactionService;
 
-    @KafkaListener(
-            topics = KafkaTopics.MARKET_PURCHASE_EVENT,
-            groupId = "${spring.application.name}-group",
-            containerFactory = "marketPurchaseEventKafkaListenerFactory"
-    )
-    public void consumeCarbonCreditValidateResponse(MarketPurchaseMessage message) {
-        log.info("📥 Received Market purchase message: {}", message);
-        transactionService.createPendingTransaction(message);
-    }
+    // ❌ Đã disable Kafka listener vì transaction được tạo qua API endpoint
+    // Nếu muốn dùng Kafka, cần có service gửi message đến MARKET_PURCHASE_EVENT topic
+    
+    // @KafkaListener(
+    //         topics = KafkaTopics.MARKET_PURCHASE_EVENT,
+    //         groupId = "${spring.application.name}-group",
+    //         containerFactory = "marketPurchaseEventKafkaListenerFactory"
+    // )
+    // public void consumeCarbonCreditValidateResponse(MarketPurchaseMessage message) {
+    //     log.info("📥 Received Market purchase message: {}", message);
+    //     transactionService.createPendingTransaction(message);
+    // }
 }
