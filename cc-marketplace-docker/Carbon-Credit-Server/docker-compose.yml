@@ -5,7 +5,7 @@ services:
   # 1. CONFIG SERVER
   # ==================================================================
   config-server:
-    image: henryngyn2264/config-server:1.1.2
+    image: henryngyn2264/config-server:1.2.0
     container_name: config-server
     restart: unless-stopped
     ports:
@@ -32,7 +32,7 @@ services:
   # 2. EUREKA SERVER
   # ==================================================================
   eureka-server:
-    image: henryngyn2264/eureka-server:1.1.2
+    image: henryngyn2264/eureka-server:1.2.0
     container_name: eureka-server
     restart: unless-stopped
     ports:
@@ -55,7 +55,7 @@ services:
   # 3. API GATEWAY
   # ==================================================================
   api-gateway:
-    image: henryngyn2264/api-gateway:1.1.2
+    image: henryngyn2264/api-gateway:1.2.0
     container_name: api-gateway
     restart: unless-stopped
     ports:
@@ -67,6 +67,7 @@ services:
         condition: service_healthy
     environment:
       - CONFIG_SERVER_URL=config-server
+      - EUREKA_HOSTNAME=eureka-server
     networks:
       - microservices-network
     healthcheck:
@@ -80,7 +81,7 @@ services:
   # 4. USER SERVICE
   # ==================================================================
   user-service:
-    image: henryngyn2264/user-service:1.1.2
+    image: henryngyn2264/user-service:1.2.0
     container_name: user-service
     restart: unless-stopped
     ports:
@@ -115,7 +116,7 @@ services:
   # 5. VERIFICATION SERVICE
   # ==================================================================
   verification-service:
-    image: henryngyn2264/verification-service:1.1.2
+    image: henryngyn2264/verification-service:1.2.0
     container_name: verification-service
     restart: unless-stopped
     ports:
@@ -150,7 +151,7 @@ services:
   # 6. VEHICLE SERVICE
   # ==================================================================
   vehicle-service:
-    image: henryngyn2264/vehicle-service:1.1.2
+    image: henryngyn2264/vehicle-service:1.2.0
     container_name: vehicle-service
     restart: unless-stopped
     ports:
@@ -185,7 +186,7 @@ services:
   # 7. WALLET SERVICE
   # ==================================================================
   wallet-service:
-    image: henryngyn2264/wallet-service:1.1.2
+    image: henryngyn2264/wallet-service:1.2.0
     container_name: wallet-service
     restart: unless-stopped
     ports:
@@ -220,7 +221,7 @@ services:
   # 8. MEDIA SERVICE
   # ==================================================================
   media-service:
-    image: henryngyn2264/media-service:1.1.2
+    image: henryngyn2264/media-service:1.2.0
     container_name: media-service
     restart: unless-stopped
     ports:
@@ -255,7 +256,7 @@ services:
   # 9. MARKET SERVICE
   # ==================================================================
   market-service:
-    image: henryngyn2264/market-service:1.1.2
+    image: henryngyn2264/market-service:1.2.0
     container_name: market-service
     restart: unless-stopped
     ports:
@@ -290,7 +291,7 @@ services:
   # 10. TRANSACTION SERVICE
   # ==================================================================
   transaction-service:
-    image: henryngyn2264/transaction-service:1.1.2
+    image: henryngyn2264/transaction-service:1.2.0
     container_name: transaction-service
     restart: unless-stopped
     ports:
