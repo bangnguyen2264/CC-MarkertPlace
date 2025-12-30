@@ -1,309 +1,309 @@
 services:
-  # ==================================================================
-  # 1. CONFIG SERVER
-  # ==================================================================
-  config-server:
-    build: ./config-server
-    container_name: config-server
-    restart: unless-stopped
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./config-server/src/main/resources/configurations:/configurations
-    environment:
-      - SPRING_PROFILES_ACTIVE=native
-      - EUREKA_HOSTNAME=eureka-server
-      - KAFKA_BOOTSTRAP=kafka
-      - GATEWAY_URL=api-gateway
-      - REDIS_HOST=redis
-      - DB_HOST=postgres
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  # ==================================================================
-  # 2. EUREKA SERVER
-  # ==================================================================
-  eureka-server:
-    build: ./eureka-server
-    container_name: eureka-server
-    restart: unless-stopped
-    ports:
-      - "8761:8761"
-    depends_on:
-      config-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=config-server
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
-
-  # ==================================================================
-  # 3. API GATEWAY
-  # ==================================================================
-  api-gateway:
-    build: ./api-gateway
-    container_name: api-gateway
-    restart: unless-stopped
-    ports:
-      - "8222:8222"
-    depends_on:
-      config-server:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-    environment:
-      - CONFIG_SERVER_URL=config-server
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 60s
-
-  # ==================================================================
-  # 4. USER SERVICE
-  # ==================================================================
-  user-service:
-    build: ./user-service
-    container_name: user-service
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-      - REDIS_HOST=redis
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
-  # ==================================================================
-  # 5. VERIFICATION SERVICE
-  # ==================================================================
-  verification-service:
-    build: ./verification-service
-    container_name: verification-service
-    restart: unless-stopped
-    ports:
-      - "8083:8083"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-  # ==================================================================
-  # 6. VEHICLE SERVICE
-  # ==================================================================
-  vehicle-service:
-    build: ./vehicle-service
-    container_name: vehicle-service
-    restart: unless-stopped
-    ports:
-      - "8082:8082"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
-  # ==================================================================
-  # 7. WALLET SERVICE
-  # ==================================================================
-  wallet-service:
-    build: ./wallet-service
-    container_name: wallet-service
-    restart: unless-stopped
-    ports:
-      - "8084:8084"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
-  # ==================================================================
-  # 8. MEDIA SERVICE
-  # ==================================================================
-  media-service:
-    build: ./media-service
-    container_name: media-service
-    restart: unless-stopped
-    ports:
-      - "8085:8085"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-      - REDIS_HOST=redis
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
-  # ==================================================================
-  # 9. MARKET SERVICE
-  # ==================================================================
-  market-service:
-    build: ./market-service
-    container_name: market-service
-    restart: unless-stopped
-    ports:
-      - "8086:8086"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
-  # ==================================================================
-  # 10. TRANSACTION SERVICE
-  # ==================================================================
-  transaction-service:
-    build: ./transaction-service
-    container_name: transaction-service
-    restart: unless-stopped
-    ports:
-      - "8087:8087"
-    environment:
-      - CONFIG_SERVER_URL=config-server
-      - DB_HOST=postgres
-      - KAFKA_BOOTSTRAP=kafka
-      - EUREKA_HOSTNAME=eureka-server
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
+#  # ==================================================================
+#  # 1. CONFIG SERVER
+#  # ==================================================================
+#  config-server:
+#    build: ./config-server
+#    container_name: config-server
+#    restart: unless-stopped
+#    ports:
+#      - "8888:8888"
+#    volumes:
+#      - ./config-server/src/main/resources/configurations:/configurations
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=native
+#      - EUREKA_HOSTNAME=eureka-server
+#      - KAFKA_BOOTSTRAP=kafka
+#      - GATEWAY_URL=api-gateway
+#      - REDIS_HOST=redis
+#      - DB_HOST=postgres
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 30s
+#
+#  # ==================================================================
+#  # 2. EUREKA SERVER
+#  # ==================================================================
+#  eureka-server:
+#    build: ./eureka-server
+#    container_name: eureka-server
+#    restart: unless-stopped
+#    ports:
+#      - "8761:8761"
+#    depends_on:
+#      config-server:
+#        condition: service_healthy
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 20
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 3. API GATEWAY
+#  # ==================================================================
+#  api-gateway:
+#    build: ./api-gateway
+#    container_name: api-gateway
+#    restart: unless-stopped
+#    ports:
+#      - "8222:8222"
+#    depends_on:
+#      config-server:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 30
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 4. USER SERVICE
+#  # ==================================================================
+#  user-service:
+#    build: ./user-service
+#    container_name: user-service
+#    restart: unless-stopped
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#      - REDIS_HOST=redis
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 5. VERIFICATION SERVICE
+#  # ==================================================================
+#  verification-service:
+#    build: ./verification-service
+#    container_name: verification-service
+#    restart: unless-stopped
+#    ports:
+#      - "8083:8083"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#  # ==================================================================
+#  # 6. VEHICLE SERVICE
+#  # ==================================================================
+#  vehicle-service:
+#    build: ./vehicle-service
+#    container_name: vehicle-service
+#    restart: unless-stopped
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 7. WALLET SERVICE
+#  # ==================================================================
+#  wallet-service:
+#    build: ./wallet-service
+#    container_name: wallet-service
+#    restart: unless-stopped
+#    ports:
+#      - "8084:8084"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 8. MEDIA SERVICE
+#  # ==================================================================
+#  media-service:
+#    build: ./media-service
+#    container_name: media-service
+#    restart: unless-stopped
+#    ports:
+#      - "8085:8085"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#      - REDIS_HOST=redis
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8085/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 9. MARKET SERVICE
+#  # ==================================================================
+#  market-service:
+#    build: ./market-service
+#    container_name: market-service
+#    restart: unless-stopped
+#    ports:
+#      - "8086:8086"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
+#
+#  # ==================================================================
+#  # 10. TRANSACTION SERVICE
+#  # ==================================================================
+#  transaction-service:
+#    build: ./transaction-service
+#    container_name: transaction-service
+#    restart: unless-stopped
+#    ports:
+#      - "8087:8087"
+#    environment:
+#      - CONFIG_SERVER_URL=config-server
+#      - DB_HOST=postgres
+#      - KAFKA_BOOTSTRAP=kafka
+#      - EUREKA_HOSTNAME=eureka-server
+#
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      - microservices-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8087/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 60s
   # ==================================================================
   # 5. NGROK
   # ==================================================================
@@ -312,14 +312,14 @@ services:
     container_name: ngrok
     restart: unless-stopped
     command: >
-      http api-gateway:8222
+      http localhost:8222
       --authtoken=350FGvfDE0KqJXklWdjB1fSAVVw_3sJLnpD2SxvZHtxAgxZXT
       --log=stdout
     ports:
       - "4040:4040"
-    depends_on:
-      api-gateway:
-        condition: service_healthy
+#    depends_on:
+#      api-gateway:
+#        condition: service_healthy
     networks:
       - microservices-network
 
@@ -383,7 +383,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:

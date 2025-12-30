@@ -30,31 +30,58 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().value();
             String method = request.getMethod() != null ? request.getMethod().name() : "UNKNOWN";
-            log.info("Request URI: " + request.getURI());
+
+            log.info("➡️ Incoming request: {} {}", method, path);
+
             SecurityRule rule = ruleMatcher.match(path, request.getMethod());
 
-            // 🔓 Nếu là PUBLIC → bỏ qua xác thực
-            if (rule != null && isPublicAccess(rule)) {
-                log.debug("Public endpoint: {} {}", method, path);
+            if (rule == null) {
+                log.warn("⚠️ No security rule matched for {} {}", method, path);
+            } else {
+                log.info("✅ Matched rule:");
+                log.info("   - rule.path     = {}", rule.getPath());
+                log.info("   - rule.methods  = {}", rule.getMethods());
+                log.info("   - rule.access   = {}", rule.getAccess());
+            }
+
+            // 🔓 PUBLIC check
+            if (rule == null) {
+                log.warn("⚠️ No rule matched → allow request by default");
                 return chain.filter(exchange);
             }
 
-            // 🛡️ Nếu yêu cầu xác thực
+            if (isPublicAccess(rule)) {
+                log.info("🔓 PUBLIC access granted");
+                return chain.filter(exchange);
+            }
+
+            log.info("🛡️ Authentication required for {} {}", method, path);
+
+            // 🧾 Header check
             String authHeader = request.getHeaders().getFirst(jwtProperties.getAuthHeader());
+            log.debug("Authorization header: {}", authHeader);
+
             if (authHeader == null || authHeader.isEmpty()) {
+                log.warn("❌ Missing Authorization header");
                 return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
             String token = jwtUtil.extractTokenFromHeader(authHeader);
+            log.debug("Extracted token: {}", token);
+
             if (token == null || !jwtUtil.validateAccessToken(token)) {
+                log.warn("Invalid or expired token");
                 return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
             }
 
             String username = jwtUtil.extractUsername(token);
             String role = jwtUtil.extractRole(token);
 
-            // ⚖️ Kiểm tra role
+            log.info("Authenticated user: username={}, role={}", username, role);
+
+            // ⚖️ Role check
             if (rule != null && !hasRequiredRole(rule, role)) {
+                log.warn("Forbidden: role {} not allowed, required={}", role, rule.getAccess());
                 return onError(exchange, "Forbidden: insufficient permissions", HttpStatus.FORBIDDEN);
             }
 
@@ -63,17 +90,22 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                     .header("X-User-Role", role)
                     .build();
 
+            log.info("✅ Request authorized, forwarding...");
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         };
     }
 
+
     private boolean isPublicAccess(SecurityRule rule) {
-        return rule.getRoles() != null &&
-                rule.getRoles().stream().anyMatch("PUBLIC"::equalsIgnoreCase);
+        return rule.getAccess() != null &&
+                rule.getAccess().stream()
+                        .map(String::trim)
+                        .anyMatch(r -> r.equalsIgnoreCase("PUBLIC"));
     }
 
+
     private boolean hasRequiredRole(SecurityRule rule, String userRole) {
-        if (rule.getRoles() == null || rule.getRoles().isEmpty()) {
+        if (rule.getAccess() == null || rule.getAccess().isEmpty()) {
             return true; // Nếu không định nghĩa role → cho phép tất cả
         }
 
@@ -83,7 +115,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         }
 
         // Kiểm tra role cụ thể
-        return rule.getRoles().stream()
+        return rule.getAccess().stream()
                 .anyMatch(r -> r.equalsIgnoreCase(userRole));
     }
 

@@ -1,9 +1,9 @@
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOSTNAME:localhost}
   client:
     service-url:
-      defaultZone: http://${EUREKA_HOSTNAME:eureka-server}:8761/eureka/
+      defaultZone: http://${eureka.instance.hostname}:8761/eureka/
 name:
   value: carbon_credit_marketplace
 spring:
