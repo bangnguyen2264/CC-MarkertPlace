@@ -1,4 +1,4 @@
-# 🌿 Carbon Credit Marketplace - Docker Deployment
+# Carbon Credit Marketplace for EV Owners - Nền tảng giao dịch tín chỉ carbon cho chủ sở hữu xe điện
 
 Hướng dẫn triển khai dự án Carbon Credit Marketplace bằng Docker.
 
@@ -360,8 +360,7 @@ Nếu gặp vấn đề, vui lòng:
 3. Kiểm tra Docker có đủ resources (RAM, CPU)
 
 ---
-# Carbon Credit Marketplace for EV Owners - Nền tảng giao dịch tín chỉ carbon cho chủ sở hữu xe điện
 
-> **Lưu ý:** Repository này chỉ chứa mã nguồn Backend. Vui lòng truy cập [tại đây](https://github.com/bangnguyen2264/cc-market-ui.git) để xem mã nguồn ReactJS UI.
-**Version**: 1.1.2  
-**Last Updated**: November 2025
+* **Lưu ý:** Repository này chỉ chứa mã nguồn Backend. Vui lòng truy cập [tại đây](https://github.com/bangnguyen2264/cc-market-ui.git) để xem mã nguồn ReactJS UI
+* **Version**: 1.1.2
+* **Last Updated**: November 2025
