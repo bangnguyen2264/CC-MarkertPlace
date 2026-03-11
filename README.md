@@ -13,6 +13,10 @@ Hướng dẫn triển khai dự án Carbon Credit Marketplace bằng Docker.
 - [Quản lý & Monitoring](#-quản-lý--monitoring)
 - [Troubleshooting](#-troubleshooting)
 
+## 📖 Tài liệu chi tiết
+
+- [Payment Flow Documentation](docs/payment-flow.md) — Chi tiết luồng thanh toán giữa các microservice (WALLET & VNPay)
+
 ---
 
 ## 💻 Yêu cầu hệ thống
